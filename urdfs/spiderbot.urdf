@@ -1,0 +1,383 @@
+<robot name="spiderbot">
+    <link name="SpiderBody">
+        <visual>
+            <origin xyz="0 0 0.35"/>
+            <geometry>
+                <box size="0.95 0.93 1.1835"/>
+            </geometry>
+            <material name = "Blue">
+                <color rgba="0 0.79 1.0 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.35"/>
+            <geometry>
+                <box size="0.95 0.93 1.1835"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="5"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        </inertial>
+    </link>
+
+    
+    <!-- Front Left Leg  -->
+    <link name="FL0">
+        <visual>
+            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+            <material name = "Orange">
+                <color rgba="1.0 0.54 0.0 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="FLJ0" type="revolute">
+        <axis xyz="0 0 -1"/>
+        <parent link="SpiderBody"/>
+        <child link="FL0"/>
+        <origin rpy="0.0 0 3.1415" xyz="-0.34317 -0.50021 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="FL1">
+        <visual>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.127 0.6541 0.381"/>
+            </geometry>
+            <material name = "Orange">
+                <color rgba="1.0 0.54 0.0 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="FLJ1" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="FL0"/>
+        <child link="FL1"/>
+        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="FL2">
+        <visual>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+            <material name = "Orange">
+                <color rgba="1.0 0.54 0.0 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="FLJ2" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="FL1"/>
+        <child link="FL2"/>
+        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+
+    <!-- Front Right Leg  -->
+    <link name="FR0">
+        <visual>
+            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+            <material name = "Green">
+                <color rgba="0 1 0.0 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="FRJ0" type="revolute">
+        <axis xyz="0 0 1"/>
+        <parent link="SpiderBody"/>
+        <child link="FR0"/>
+        <origin rpy="0.0 0 0" xyz="-0.34317 0.50021 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="FR1">
+        <visual>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.127 0.6541 0.381"/>
+            </geometry>
+            <material name = "Green">
+                <color rgba="0 1 0.0 1.0"/>               
+            </material>  
+        </visual>
+        <collision>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="FRJ1" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="FR0"/>
+        <child link="FR1"/>
+        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="FR2">
+        <visual>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+            <material name = "Green">
+                <color rgba="0 1 0.0 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="FRJ2" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="FR1"/>
+        <child link="FR2"/>
+        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <!-- Back Left Leg  -->
+    <link name="BL0">
+        <visual>
+            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+            <material name = "Gold">
+                <color rgba="1 1 0.0 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="BLJ0" type="revolute">
+        <axis xyz="0 0 1"/>
+        <parent link="SpiderBody"/>
+        <child link="BL0"/>
+        <origin rpy="0.0 0 3.1415" xyz="0.34317 -0.50021 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="BL1">
+        <visual>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.127 0.6541 0.381"/>
+            </geometry>
+            <material name = "Gold">
+                <color rgba="1 1 0.0 1.0"/>               
+            </material>    
+        </visual>
+        <collision>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="BLJ1" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="BL0"/>
+        <child link="BL1"/>
+        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="BL2">
+        <visual>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+            <material name = "Gold">
+                <color rgba="1 1 0.0 1.0"/>               
+            </material>     
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="BLJ2" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="BL1"/>
+        <child link="BL2"/>
+        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <!-- Back Right Leg  -->
+    <link name="BR0">
+        <visual>
+            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+            <material name = "Purple">
+                <color rgba="0.522 0 1 1.0"/>               
+            </material>   
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="BRJ0" type="revolute">
+        <axis xyz="0 0 -1"/>
+        <parent link="SpiderBody"/>
+        <child link="BR0"/>
+        <origin rpy="0.0 0 0" xyz="0.34317 0.50021 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="BR1">
+        <visual>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.127 0.6541 0.381"/>
+            </geometry>
+            <material name = "Purple">
+                <color rgba="0.522 0 1 1.0"/>               
+            </material>      
+        </visual>
+        <collision>
+        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <geometry>
+                <box size="0.3683 0.43134 0.127"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="BRJ1" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="BR0"/>
+        <child link="BR1"/>
+        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+    <link name="BR2">
+        <visual>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+            <material name = "Purple">
+                <color rgba="0.522 0 1 1.0"/>               
+            </material>    
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius=".11" length="1.04"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="1"/>
+            <inertia ixx="1.0" ixy="1.0" ixz="1.0" iyy="1.0" iyz="1.0" izz="1.0"/>
+        </inertial>
+    </link>
+    <joint name="BRJ2" type="revolute">
+        <axis xyz="1 0 0"/>
+        <parent link="BR1"/>
+        <child link="BR2"/>
+        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
+        <joint_properties damping="0.0" friction="0.0"/>
+    </joint>
+
+
+</robot>

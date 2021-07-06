@@ -2,6 +2,7 @@
 
 """
 
+from typing import ChainMap
 from icecream import ic
 import pybullet as pb
 import pybullet_data
@@ -12,10 +13,12 @@ class Driver:
         self.cyaw = 10
         self.cpitch = -15
         self.cdist = 5
+        self.cameraFollow = False
 
 
     def updateKeys(self):
         keys = pb.getKeyboardEvents()
+        #ic(keys)
                 
         if keys.get(65296):  # right arrow
             self.cyaw += 1
@@ -29,6 +32,8 @@ class Driver:
             self.cdist += 0.1
         if keys.get(101):  # e
             self.cdist -= 0.1
+        if keys.get(99):
+            self.cameraFollow = not self.cameraFollow
     
     def run(self):
         physicsClient = pb.connect(pb.GUI)  # or p.DIRECT for non-graphical version
@@ -36,7 +41,7 @@ class Driver:
         pb.setGravity(0,0,-10)
         planeId = pb.loadURDF("plane.urdf")
         botId = pb.loadURDF("urdfs/spiderbot.urdf")
-        initialCubePos, initialCubeOrn = pb.getBasePositionAndOrientation(botId)
+        lastCubePos, initialCubeOrn = pb.getBasePositionAndOrientation(botId)
         
         pb.setGravity(0, 0, -9.81)
         pb.setRealTimeSimulation(1)
@@ -44,7 +49,12 @@ class Driver:
         while True:
             #ic(pb.getDebugVisualizerCamera())
             cubePos, cubeOrn = pb.getBasePositionAndOrientation(botId)
-            pb.resetDebugVisualizerCamera(cameraDistance = self.cdist, cameraYaw = self.cyaw, cameraPitch = self.cpitch, cameraTargetPosition = initialCubePos)
+            
+            if self.cameraFollow:
+                lastCubePos = cubePos
+            
+            target_pos = cubePos if self.cameraFollow else lastCubePos 
+            pb.resetDebugVisualizerCamera(cameraDistance = self.cdist, cameraYaw = self.cyaw, cameraPitch = self.cpitch, cameraTargetPosition = target_pos)
             self.updateKeys()
             
             

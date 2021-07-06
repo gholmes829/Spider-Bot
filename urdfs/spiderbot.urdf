@@ -93,6 +93,7 @@
             </material>   
         </visual>
         <collision>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -183,6 +184,7 @@
             </material>   
         </visual>
         <collision>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -272,6 +274,7 @@
             </material>     
         </visual>
         <collision>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -361,6 +364,7 @@
             </material>    
         </visual>
         <collision>
+        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>

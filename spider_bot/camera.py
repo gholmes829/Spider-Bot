@@ -5,7 +5,7 @@ from icecream import ic
 import pybullet as pb
 import numpy as np
 
-def rotationGenerator(theta: float) -> callable:
+def rotation_generator(theta: float) -> callable:
     """Returns lambda func to rotate tuple CCW by <theta> degrees"""
     thetaRad = np.radians(theta)
     cosTheta = np.cos(thetaRad)
@@ -26,8 +26,8 @@ class Camera:
         self.dist = 5
         self.target_lock = False
         
-        self.rotate_cw = rotationGenerator(-90)
-        self.rotate_ccw = rotationGenerator(90)
+        self.rotate_cw = rotation_generator(-90)
+        self.rotate_ccw = rotation_generator(90)
         
     def update(self):
         self.pos = self.pos_func()

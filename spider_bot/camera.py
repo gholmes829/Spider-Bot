@@ -7,12 +7,12 @@ import numpy as np
 
 def rotation_generator(theta: float) -> callable:
     """Returns lambda func to rotate tuple CCW by <theta> degrees"""
-    thetaRad = np.radians(theta)
-    cosTheta = np.cos(thetaRad)
-    sinTheta = np.sin(thetaRad)
+    theta_rad = np.radians(theta)
+    cos_theta = np.cos(theta_rad)
+    sin_theta = np.sin(theta_rad)
     return lambda v: (
-        round(v[0] * cosTheta - v[1] * sinTheta, 5),
-        round(v[0] * sinTheta + v[1] * cosTheta, 5)
+        round(v[0] * cos_theta - v[1] * sin_theta, 5),
+        round(v[0] * sin_theta + v[1] * cos_theta, 5)
     )
 
 class Camera:

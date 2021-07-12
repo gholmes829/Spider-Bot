@@ -26,10 +26,10 @@ class Driver:
             pos, vel = observation['pos'], observation['vel']  # break down state of joints
             # log pos and vel
             i += 1
-            if done or i > 500:
-                self.env.reset()
-                j += 1
-                i = 0
+            #if done or i > 500:
+            #    self.env.reset()
+            #    j += 1
+            #    i = 0
         self.env.close()
         
     def train(self):

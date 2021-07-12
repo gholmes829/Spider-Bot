@@ -16,7 +16,7 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="5"/>
+            <mass value="25"/>
             <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
         </inertial>
     </link>
@@ -54,7 +54,7 @@
 
     <link name="FL1">
         <visual>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
                 <box size="0.127 0.6541 0.381"/>
             </geometry>
@@ -63,9 +63,9 @@
             </material>   
         </visual>
         <collision>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.127 0.6541 0.381"/>
             </geometry>
         </collision>
         <inertial>
@@ -84,7 +84,7 @@
 
     <link name="FL2">
         <visual>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -93,7 +93,7 @@
             </material>   
         </visual>
         <collision>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -125,6 +125,7 @@
             </material>   
         </visual>
         <collision>
+            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
             <geometry>
                 <box size="0.3683 0.43134 0.127"/>
             </geometry>
@@ -145,7 +146,7 @@
 
     <link name="FR1">
         <visual>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
                 <box size="0.127 0.6541 0.381"/>
             </geometry>
@@ -154,9 +155,9 @@
             </material>  
         </visual>
         <collision>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.127 0.6541 0.381"/>
             </geometry>
         </collision>
         <inertial>
@@ -175,7 +176,7 @@
 
     <link name="FR2">
         <visual>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -184,7 +185,7 @@
             </material>   
         </visual>
         <collision>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -215,6 +216,7 @@
             </material>   
         </visual>
         <collision>
+            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
             <geometry>
                 <box size="0.3683 0.43134 0.127"/>
             </geometry>
@@ -235,7 +237,7 @@
 
     <link name="BL1">
         <visual>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
                 <box size="0.127 0.6541 0.381"/>
             </geometry>
@@ -244,9 +246,9 @@
             </material>    
         </visual>
         <collision>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.127 0.6541 0.381"/>
             </geometry>
         </collision>
         <inertial>
@@ -265,7 +267,7 @@
 
     <link name="BL2">
         <visual>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -274,7 +276,7 @@
             </material>     
         </visual>
         <collision>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -305,6 +307,7 @@
             </material>   
         </visual>
         <collision>
+            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
             <geometry>
                 <box size="0.3683 0.43134 0.127"/>
             </geometry>
@@ -325,7 +328,7 @@
 
     <link name="BR1">
         <visual>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
                 <box size="0.127 0.6541 0.381"/>
             </geometry>
@@ -334,9 +337,9 @@
             </material>      
         </visual>
         <collision>
-        <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.127 0.6541 0.381"/>
             </geometry>
         </collision>
         <inertial>
@@ -355,7 +358,7 @@
 
     <link name="BR2">
         <visual>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>
@@ -364,7 +367,7 @@
             </material>    
         </visual>
         <collision>
-        <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
             </geometry>

@@ -23,6 +23,8 @@ class Driver:
         while j < 3:
             controls = [-5 * np.sin(i / 10) for _ in range(4)]
             observation, reward, done, info = self.env.step(controls)
+            pos, vel = observation['pos'], observation['vel']  # break down state of joints
+            # log pos and vel
             i += 1
             if done or i > 500:
                 self.env.reset()

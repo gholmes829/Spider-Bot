@@ -17,6 +17,9 @@ class SpiderBot:
         self.joints = [self.inner_joints, self.middle_joints, self.outer_joints]
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
         
+        self.reset_joints_state(self.outer_joints, [-1 for _ in range(4)])
+        self.reset_joints_state(self.middle_joints, [-0.25 for _ in range(4)])
+        self.reset_joints_state(self.inner_joints, [0.5 for i in range(4)])
         # JOINT INDICES
         # 0 is orange inner leg to body
         # 1 is orange inner leg to middle leg
@@ -54,4 +57,9 @@ class SpiderBot:
             'reaction_forces': [joint[2] for joint in state],
             'motor_torques': [joint[3] for joint in state]
         }
+        
+    def reset_joints_state(self, joint_indices, target_pos):
+        for i, pos in zip(joint_indices, target_pos):
+            pb.resetJointState(self.id, i, pos)
+        
         

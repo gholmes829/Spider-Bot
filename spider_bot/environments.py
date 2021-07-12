@@ -22,8 +22,8 @@ class SpiderBotSimulator(Env):
         self.physics_client = pb.connect(pb.GUI if self.gui else pb.DIRECT)  # pb.DIRECT for non-graphical version
         pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # get default URDFs like plane   
         
-        pb.setRealTimeSimulation(self.real_time)  # make simulation decoupled from <stepSimulation> and based on internal asynchronous clock 
-        pb.setGravity(0, 0, -9.81)  # earth gravity
+        pb.setRealTimeSimulation(self.real_time)     # make simulation decoupled from <pb.stepSimulation> and
+        pb.setGravity(0, 0, -9.81)  # earth gravity  # based on internal asynchronous clock instead
         
         pb.loadURDF('plane.urdf')  # basic floor
         self.spider = SpiderBot(spider_bot_model_path)

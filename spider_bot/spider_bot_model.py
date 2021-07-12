@@ -5,7 +5,7 @@
 import pybullet as pb
 
 class SpiderBot:
-    def __init__(self, model_path: str, initial_pos: tuple = (0, 0, 1)) -> None:
+    def __init__(self, model_path: str, initial_pos: tuple = (0, 0, 1.5625)) -> None:
         self.model_path = model_path
         self.id = pb.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)
         self.num_joints = pb.getNumJoints(self.id)
@@ -17,9 +17,9 @@ class SpiderBot:
         self.joints = [self.inner_joints, self.middle_joints, self.outer_joints]
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
         
-        self.reset_joints_state(self.outer_joints, [-1 for _ in range(4)])
-        self.reset_joints_state(self.middle_joints, [-0.25 for _ in range(4)])
-        self.reset_joints_state(self.inner_joints, [0.5 for i in range(4)])
+        self.reset_joints_state(self.outer_joints, [-0.5 for _ in range(4)])
+        self.reset_joints_state(self.middle_joints, [-1.0 for _ in range(4)])
+        self.reset_joints_state(self.inner_joints, [0.75 for i in range(4)])
         # JOINT INDICES
         # 0 is orange inner leg to body
         # 1 is orange inner leg to middle leg

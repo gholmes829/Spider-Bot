@@ -20,9 +20,30 @@ class Driver:
         i = 0
         j = 0
         done = False
+        
+        period = 20
+        magnitude = 7
+        alt = 0
+        
         while j < 3:
-            #controls = [-5 * np.sin(i / 10) for _ in range(4)]
-            controls = [0 for _ in range(4)]
+            controls = [
+                # outer
+                0.25 * (2 * alt - 1) * magnitude,  
+                0.25 * (2 * int(not alt) - 1) * magnitude,
+                0.25 * (2 * int(not alt) - 1) * magnitude,
+                0.25 * (2 * alt - 1) * magnitude,
+                # middle
+                -0.1 * (2 * alt - 1) * magnitude,  
+                -0.1 * (2 * int(not alt) - 1) * magnitude,
+                -0.1 * (2 * int(not alt) - 1) * magnitude,
+                -0.1 * (2 * alt - 1) * magnitude, 
+                # inner
+                0.5 * (2 * alt - 1) * magnitude,  
+                0.5 * (2 * int(not alt) - 1) * magnitude,
+                -0.5 * (2 * int(not alt) - 1) * magnitude,
+                -0.5 * (2 * alt - 1) * magnitude,
+            ]
+
             observation, reward, done, info = self.env.step(controls)
             pos, vel = observation['pos'], observation['vel']  # break down state of joints
             # log pos and vel
@@ -31,6 +52,8 @@ class Driver:
             #    self.env.reset()
             #    j += 1
             #    i = 0
+            if i % 50 == 0:
+                alt = int(not alt)
         self.env.close()
         
     def train(self):

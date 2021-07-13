@@ -41,14 +41,9 @@ class SpiderBotSimulator(Env):
         if self.gui:
             self.update_camera()
         
-        # right now this is just to test spider movements -- we will need to consider pos
-        # and torque control as well. We will also be using all of the joints. This may
-        # be a place to artificially limit joint range of motion to prevent clipping.
-        # Alternitively, we could limit range of motion internally in spider bot class 
-        
-        #target_joints = self.spider.outer_joints
-        #target_velocities = controls
-        #self.spider.set_joint_controls(target_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = target_velocities)
+        self.spider.set_joint_controls(self.spider.outer_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = controls[:4])
+        self.spider.set_joint_controls(self.spider.middle_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = controls[4:8])
+        self.spider.set_joint_controls(self.spider.inner_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = controls[8:])
         
         pb.stepSimulation()
         time.sleep(1 / 240)

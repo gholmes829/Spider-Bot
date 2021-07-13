@@ -19,7 +19,7 @@ class SpiderBot:
         
         self.reset_joints_state(self.outer_joints, [-0.5 for _ in range(4)])
         self.reset_joints_state(self.middle_joints, [-1.0 for _ in range(4)])
-        self.reset_joints_state(self.inner_joints, [0.75 for i in range(4)])
+        self.reset_joints_state(self.inner_joints, [1.0 for i in range(4)])
         # JOINT INDICES
         # 0 is orange inner leg to body
         # 1 is orange inner leg to middle leg

@@ -40,11 +40,11 @@ class SpiderBotSimulator(Env):
         self.observation_space = spaces.Box(
             low = np.array([
                     *np.full(12, -2*np.pi),
-                    *np.full(12, np.NINF)
+                    *np.full(12, -self.spider.nominal_joint_velocity)
                 ]),
             high = np.array([
                     *np.full(12, 2*np.pi),
-                    *np.full(12, np.inf)
+                    *np.full(12, self.spider.nominal_joint_velocity)
                 ]),
         )
         

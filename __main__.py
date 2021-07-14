@@ -4,11 +4,11 @@ import sys
 from driver import Driver
 
 
-def main(args):
+def main():
     """Main func."""
     driver = Driver()
-    driver.run(args)
+    driver.run()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

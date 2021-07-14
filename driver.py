@@ -5,6 +5,7 @@
 import os
 import numpy as np
 from icecream import ic  # better printing for debugging
+import argparse
 
 from spider_bot.environments import SpiderBotSimulator
 from spider_bot.agent import Agent
@@ -12,12 +13,23 @@ from spider_bot.training import Evolution
 
 class Driver:
     def __init__(self) -> None:
+        self.modes = {
+            'test': lambda: self.episode(Agent(24, 12)),
+            'train': lambda: self.train()
+        }
+        
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--mode', choices=self.modes.keys(), help='select mode from {train, test}')
+        args = parser.parse_args()
+        self.mode = args.mode
+        
         self.cwd = os.getcwd()
         self.spider_urdf_path = os.path.join(self.cwd, 'urdfs', 'spider_bot_v0.urdf')
         self.env = SpiderBotSimulator(self.spider_urdf_path, real_time_enabled=True, gui=True)
     
-    def run(self, args: list) -> None:
-        self.episode(Agent(24, 12))
+    def run(self) -> None:
+        ic(self.mode)
+        self.modes[self.mode]()
         
     def preprocess(self, observation):
         pos, vel = np.split(observation, [12])

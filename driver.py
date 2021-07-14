@@ -85,7 +85,8 @@ class Driver:
     def graph_data(self, 
                    joint_positions:  np.array, 
                    joint_velocities: np.array,
-                   body_positions:   np.array
+                   body_positions:   np.array,
+                   display_graphs:   bool = True
                    ) -> None:
 
         print("positions:", joint_positions.shape)
@@ -94,15 +95,15 @@ class Driver:
 
         ax = GraphJointVelocities(joint_velocities[self.env.spider.outer_joints], 'Outer')
         plt.savefig(os.path.join(self.paths['figures'], 'outer_joint_velocities'))
-        plt.show()
+        if display_graphs: plt.show()
 
         ax = GraphJointVelocities(joint_velocities[self.env.spider.inner_joints], 'Inner')
         plt.savefig(os.path.join(self.paths['figures'], 'inner_joint_velocities'))
-        plt.show()
+        if display_graphs: plt.show()
 
         ax = GraphBodyTrajectory(body_positions)
         plt.savefig(os.path.join(self.paths['figures'], 'body_position'))
-        plt.show()
+        if display_graphs: plt.show()
 
 
         

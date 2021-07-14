@@ -20,6 +20,12 @@ def GraphBodyTrajectory(body_pos: np.array) -> plt.Axes:
     return ax
 
 def GraphJointVelocities(velocities: np.array, location: str) -> plt.Axes:
+    """ 
+    Creates four 2D graphs of the velocities of each of the 
+    robots joints over time. 
+
+    """
+
     front_left, front_right, back_left, back_right = velocities[0:4]
     x = np.linspace(0, front_left.size, num=front_left.size)
 

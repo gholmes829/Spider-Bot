@@ -22,8 +22,8 @@ class SpiderBotSimulator(Env):
         self.physics_client = pb.connect(pb.GUI if self.gui else pb.DIRECT)  # pb.DIRECT for non-graphical version
         pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # get default URDFs like plane   
         
-        pb.setRealTimeSimulation(self.real_time_enabled)     # make simulation decoupled from <pb.stepSimulation> and
-        pb.setGravity(0, 0, -9.81)  # earth gravity  # based on internal asynchronous clock instead
+        pb.setRealTimeSimulation(self.real_time_enabled)     # make simulation decoupled from <pb.stepSimulation> and based on internal asynchronous clock instead
+        pb.setGravity(0, 0, -9.81)  # earth gravity
         
         self.plane_id = pb.loadURDF('plane.urdf')  # basic floor
         self.spider = SpiderBot(spider_bot_model_path)
@@ -32,7 +32,21 @@ class SpiderBotSimulator(Env):
         self.camera = Camera(initial_pos = spider_pos)
         self.camera_tracking = False
         
-        # ToDo: define sample and actions spaces using <gym.spaces>
+        self.action_space = spaces.Box(
+            low = np.full(12, -1),
+            high = np.full(12, 1)
+        )
+        
+        self.observation_space = spaces.Box(
+            low = np.array([
+                    *np.full(12, -2*np.pi),
+                    *np.full(12, np.NINF)
+                ]),
+            high = np.array([
+                    *np.full(12, 2*np.pi),
+                    *np.full(12, np.inf)
+                ]),
+        )
         
         self.i = 0
         self.t = 0
@@ -41,9 +55,9 @@ class SpiderBotSimulator(Env):
         if self.gui:
             self.update_camera()
         
-        self.spider.set_joint_controls(self.spider.outer_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = controls[:4])
-        self.spider.set_joint_controls(self.spider.middle_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = controls[4:8])
-        self.spider.set_joint_controls(self.spider.inner_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = controls[8:])
+        self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
+        self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
+        self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
         pb.stepSimulation()
         pb.performCollisionDetection()
@@ -58,7 +72,11 @@ class SpiderBotSimulator(Env):
         return observation, reward, done, info  # adhere to gym interface
         
     def get_observation(self) -> dict:
-        return self.spider.get_joints_state(self.spider.joints_flat)
+        joint_info = self.spider.get_joints_state(self.spider.joints_flat)
+        return np.array([
+            *joint_info['pos'],
+            *joint_info['vel']
+        ])
     
     def spider_is_standing(self):
         # returns !(there exists some point of contact involving a spider link thats not an outer leg)

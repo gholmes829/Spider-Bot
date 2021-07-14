@@ -62,7 +62,7 @@ class SpiderBotSimulator(Env):
         pb.stepSimulation()
         pb.performCollisionDetection()
         
-        #time.sleep(1 / 240)
+        time.sleep(1 / 240)
         self.i += 1
         observation = self.get_observation()
         reward = 0

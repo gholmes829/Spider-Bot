@@ -68,12 +68,14 @@ class Driver:
                 i += 1
         except KeyboardInterrupt:
             self.env.close()
+
         if eval:
             self.graph_data(
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
                 np.array(body_pos).T
             )
+            
         return rewards
         
     def calc_fitness(agent):

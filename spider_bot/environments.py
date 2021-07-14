@@ -67,16 +67,25 @@ class SpiderBotSimulator(Env):
         observation = self.get_observation()
         reward = 0
         done = self.is_terminated()
-        info = {}
+        info = self.get_info()
         
         return observation, reward, done, info  # adhere to gym interface
         
-    def get_observation(self) -> dict:
+    def get_observation(self) -> np.array:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
         return np.array([
             *joint_info['pos'],
             *joint_info['vel']
         ])
+
+    def get_info(self) -> dict:
+        joint_info = self.spider.get_joints_state(self.spider.joints_flat)
+        return {
+            "body-pos":    self.spider.get_pos(),
+            "orientation": self.spider.get_orientation(),
+            "joint-pos":   joint_info['pos'],
+            "joint-vel":   joint_info['vel']
+        }
     
     def spider_is_standing(self):
         # returns !(there exists some point of contact involving a spider link thats not an outer leg)

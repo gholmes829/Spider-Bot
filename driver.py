@@ -12,14 +12,14 @@ from spider_bot.agent import Agent
 from spider_bot.training import Evolution
 
 class Driver:
-    def __init__(self) -> None:
+    def __init__(self):
         self.modes = {
             'test': lambda: self.episode(Agent(24, 12)),
             'train': lambda: self.train()
         }
         
         parser = argparse.ArgumentParser()
-        parser.add_argument('--mode', choices=self.modes.keys(), help='select mode from {train, test}')
+        parser.add_argument('mode', choices=self.modes.keys(), help='select mode from {train, test}')
         args = parser.parse_args()
         self.mode = args.mode
         
@@ -31,13 +31,13 @@ class Driver:
         ic(self.mode)
         self.modes[self.mode]()
         
-    def preprocess(self, observation):
+    def preprocess(self, observation: np.ndarray) -> np.ndarray:
         pos, vel = np.split(observation, [12])
         normal_pos = pos / (2 * np.pi)
         normal_vel = vel / self.env.spider.nominal_joint_velocity
         return np.array([*normal_pos, *normal_vel])
         
-    def episode(self, agent, logging=False) -> None:
+    def episode(self, agent: Agent, logging=False) -> None:
         i = 0
         max_steps = 5096
         done = False
@@ -58,17 +58,18 @@ class Driver:
             self.env.close()
         return rewards
         
-    def calc_fitness(agent):
+    def calc_fitness(agent: Agent) -> float:
         return 0
         
-    def log_state(self, observation, controls):
+    def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
         pass
         
-    def train(self):
+    def train(self) -> None:
+        # use class from spider_bot/training.py
         pass
     
-    def save_model(self):
+    def save_model(self) -> None:
         pass
     
-    def load_model(self):
+    def load_model(self) -> None:
         pass

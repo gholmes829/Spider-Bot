@@ -19,7 +19,7 @@ class Driver:
         }
         
         parser = argparse.ArgumentParser()
-        parser.add_argument('mode', choices=self.modes.keys(), help='select mode from {train, test}')
+        parser.add_argument('mode', choices = self.modes.keys(), help = 'determines which mode to run')
         args = parser.parse_args()
         self.mode = args.mode
         

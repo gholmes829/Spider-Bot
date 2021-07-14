@@ -15,6 +15,10 @@ class SpiderBot:
         self.inner_joints = [0, 3, 6, 9]
         self.middle_joints = [1, 4, 7, 10]
         self.outer_joints = [2, 5, 8, 11]
+        
+        self.nominal_joint_velocity = 13.09
+        self.max_joint_angle = 1.571
+        
         self.joints = [self.inner_joints, self.middle_joints, self.outer_joints]
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
         
@@ -24,6 +28,8 @@ class SpiderBot:
         self.reset_joints_state(self.inner_joints, np.full(4, 1))
         
         self.change_lateral_friction(self.outer_joints, np.full(4, 1))
+        self.set_max_joint_velocities(self.joints_flat, np.full(12, self.nominal_joint_velocity))
+        
         # JOINT INDICES
         # 0 is orange inner leg to body
         # 1 is orange inner leg to middle leg
@@ -50,8 +56,15 @@ class SpiderBot:
     def get_orientation(self):
         return list(pb.getBasePositionAndOrientation(self.id)[1])
     
-    def set_joint_controls(self, *args, **kwargs):
-        pb.setJointMotorControlArray(self.id, *args, **kwargs)
+    def set_joint_velocities(self, joint_indices, target_velocities):
+        for i, target_velocity in zip(joint_indices, target_velocities):
+            pb.setJointMotorControl2(
+                self.id,
+                i,
+                controlMode = pb.VELOCITY_CONTROL,
+                targetVelocity = target_velocity,
+                maxVelocity = self.nominal_joint_velocity
+            )
 
     def get_joints_state(self, joint_indices):
         state = pb.getJointStates(self.id, joint_indices)
@@ -70,3 +83,6 @@ class SpiderBot:
         for i, lateral_friction in zip(link_indices, target_lateral_frictions):
             pb.changeDynamics(self.id, i, lateralFriction=lateral_friction)
         
+    def set_max_joint_velocities(self, link_indices, max_velocities):
+        for i, max_joint_velocity in zip(link_indices, max_velocities):
+            pb.changeDynamics(self.id, i, maxJointVelocity=max_joint_velocity)

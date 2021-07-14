@@ -3,6 +3,7 @@
 """
 
 import pybullet as pb
+import numpy as np
 
 class SpiderBot:
     def __init__(self, model_path: str, initial_pos: tuple = (0, 0, 1.5625)) -> None:
@@ -17,9 +18,12 @@ class SpiderBot:
         self.joints = [self.inner_joints, self.middle_joints, self.outer_joints]
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
         
-        self.reset_joints_state(self.outer_joints, [-0.5 for _ in range(4)])
-        self.reset_joints_state(self.middle_joints, [-1.0 for _ in range(4)])
-        self.reset_joints_state(self.inner_joints, [1.0 for i in range(4)])
+        # move joints to initial pos
+        self.reset_joints_state(self.outer_joints, np.full(4, -0.5))
+        self.reset_joints_state(self.middle_joints, np.full(4, -1))
+        self.reset_joints_state(self.inner_joints, np.full(4, 1))
+        
+        self.change_lateral_friction(self.outer_joints, np.full(4, 5))
         # JOINT INDICES
         # 0 is orange inner leg to body
         # 1 is orange inner leg to middle leg
@@ -61,5 +65,8 @@ class SpiderBot:
     def reset_joints_state(self, joint_indices, target_pos):
         for i, pos in zip(joint_indices, target_pos):
             pb.resetJointState(self.id, i, pos)
-        
+            
+    def change_lateral_friction(self, link_indices, target_lateral_frictions):
+        for i, lateral_friction in zip(link_indices, target_lateral_frictions):
+            pb.changeDynamics(self.id, i, lateralFriction=lateral_friction)
         

@@ -93,7 +93,6 @@
             </material>   
         </visual>
         <collision>
-            <contact_coefficients mu="10" kp="1" kd="1"/>
             <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
@@ -186,7 +185,6 @@
             </material>   
         </visual>
         <collision>
-            <contact_coefficients mu="10" kp="1" kd="1"/>
             <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
@@ -278,7 +276,6 @@
             </material>     
         </visual>
         <collision>
-            <contact_coefficients mu="10" kp="1" kd="1"/>
             <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>
@@ -370,7 +367,6 @@
             </material>    
         </visual>
         <collision>
-            <contact_coefficients mu="10" kp="1" kd="1"/>
             <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
             <geometry>
                 <cylinder radius=".11" length="1.04"/>

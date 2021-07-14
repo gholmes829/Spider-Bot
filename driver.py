@@ -18,20 +18,19 @@ class Driver:
         
     def showcase(self) -> None:
         i = 0
-        j = 0
         done = False
-        
-        period = 20
-        magnitude = 7
+        magnitude = 3.75
         alt = 0
+        period = 100
         
-        while j < 3:
+        # manual tuned controls
+        while not done:
             controls = [
                 # outer
-                0.25 * (2 * alt - 1) * magnitude,  
-                0.25 * (2 * int(not alt) - 1) * magnitude,
-                0.25 * (2 * int(not alt) - 1) * magnitude,
-                0.25 * (2 * alt - 1) * magnitude,
+                0.375 * (2 * alt - 1) * magnitude,  
+                0.375 * (2 * int(not alt) - 1) * magnitude,
+                0.375 * (2 * int(not alt) - 1) * magnitude,
+                0.375 * (2 * alt - 1) * magnitude,
                 # middle
                 -0.1 * (2 * alt - 1) * magnitude,  
                 -0.1 * (2 * int(not alt) - 1) * magnitude,
@@ -48,11 +47,8 @@ class Driver:
             pos, vel = observation['pos'], observation['vel']  # break down state of joints
             # log pos and vel
             i += 1
-            #if done or i > 500:
-            #    self.env.reset()
-            #    j += 1
-            #    i = 0
-            if i % 50 == 0:
+
+            if i % period == 0:
                 alt = int(not alt)
         self.env.close()
         

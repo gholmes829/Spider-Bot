@@ -8,6 +8,9 @@ from functools import wraps
 def validate_shape(f):
     @wraps(f)
     def g(*args, **kwargs):
+        """
+        Makes assertions to catch errors with shape and normalization.
+        """
         assert len(args) == 2, f'Recieved unexpected positional arguments {args}'
         agent, observation = args
         assert all([-1.01 <= e <= 1.01 for e in observation]), f'Expected argument normalized in [-1, 1], recieved {observation}'

@@ -24,6 +24,7 @@ class SpiderBot:
         self.reset_joints_state(self.inner_joints, np.full(4, 1))
         
         self.change_lateral_friction(self.outer_joints, np.full(4, 1))
+        
         # JOINT INDICES
         # 0 is orange inner leg to body
         # 1 is orange inner leg to middle leg

@@ -25,7 +25,7 @@ class SpiderBotSimulator(Env):
         pb.setRealTimeSimulation(self.real_time_enabled)     # make simulation decoupled from <pb.stepSimulation> and
         pb.setGravity(0, 0, -9.81)  # earth gravity  # based on internal asynchronous clock instead
         
-        pb.loadURDF('plane.urdf')  # basic floor
+        self.plane_id = pb.loadURDF('plane.urdf')  # basic floor
         self.spider = SpiderBot(spider_bot_model_path)
         
         spider_pos = self.spider.get_pos()
@@ -46,6 +46,8 @@ class SpiderBotSimulator(Env):
         self.spider.set_joint_controls(self.spider.inner_joints, controlMode = pb.VELOCITY_CONTROL, targetVelocities = controls[8:])
         
         pb.stepSimulation()
+        pb.performCollisionDetection()
+        
         time.sleep(1 / 240)
         self.i += 1
         observation = self.get_observation()
@@ -57,6 +59,10 @@ class SpiderBotSimulator(Env):
         
     def get_observation(self) -> dict:
         return self.spider.get_joints_state(self.spider.joints_flat)
+    
+    def spider_is_standing(self):
+        # returns !(there exists some point of contact involving a spider link thats not an outer leg)
+        return not any([p[3] not in self.spider.outer_joints for p in pb.getContactPoints(self.spider.id, self.plane_id)])
         
     def close(self) -> None:
         pb.disconnect()

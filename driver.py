@@ -3,7 +3,6 @@
 """
 
 import os
-import numpy as np
 from icecream import ic  # better printing for debugging
 
 from spider_bot.environments import SpiderBotSimulator
@@ -44,6 +43,8 @@ class Driver:
             ]
 
             observation, reward, done, info = self.env.step(controls)
+            if not self.env.spider_is_standing():
+                ic('Not standing!!!')
             pos, vel = observation['pos'], observation['vel']  # break down state of joints
             # log pos and vel
             i += 1

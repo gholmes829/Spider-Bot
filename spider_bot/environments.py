@@ -51,12 +51,18 @@ class SpiderBotSimulator(Env):
         observation = self.get_observation()
         reward = 0
         done = self.is_terminated()
-        info = {}
+        info = self.get_info()
         
         return observation, reward, done, info  # adhere to gym interface
         
     def get_observation(self) -> dict:
         return self.spider.get_joints_state(self.spider.joints_flat)
+
+    def get_info(self) -> list:
+        return {
+            "pos":         self.spider.get_pos(),
+            "orientation": self.spider.get_orientation()
+        }
         
     def close(self) -> None:
         pb.disconnect()

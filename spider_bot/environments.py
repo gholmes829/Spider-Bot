@@ -68,7 +68,7 @@ class SpiderBotSimulator(Env):
         pb.disconnect()
         
     def is_terminated(self) -> bool:
-        return False
+        return not self.spider_is_standing()
         
     def reset(self) -> dict:
         pb.removeBody(self.spider.id)

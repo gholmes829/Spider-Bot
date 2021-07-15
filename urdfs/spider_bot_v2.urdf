@@ -1,18 +1,18 @@
 <robot name="spiderbot">
     <link name="SpiderBody">
         <visual>
-            <origin xyz="0 0 0.25"/>
+            <origin xyz="0 0 0.025"/>
             <geometry>
-                <box size="0.95 0.93 0.89"/>
+                <box size="0.095 0.093 0.089"/>
             </geometry>
             <material name = "Blue">
                 <color rgba="0 0.79 1.0 1.0"/>               
             </material>   
         </visual>
         <collision>
-            <origin xyz="0 0 0.35"/>
+            <origin xyz="0 0 0.035"/>
             <geometry>
-                <box size="0.95 0.93 0.89"/>
+                <box size="0.095 0.093 0.089"/>
             </geometry>
         </collision>
         <inertial>
@@ -25,9 +25,9 @@
     <!-- Front Left Leg  -->
     <link name="FL0">
         <visual>
-            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <origin xyz="0 0.021567 0" rpy="0.0 1.571 0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
             <material name = "Orange">
                 <color rgba="1.0 0.54 0.0 1.0"/>               
@@ -35,7 +35,7 @@
         </visual>
         <collision>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
         </collision>
         <inertial>
@@ -47,25 +47,25 @@
         <axis xyz="0 0 -1"/>
         <parent link="SpiderBody"/>
         <child link="FL0"/>
-        <origin rpy="0.0 0 3.1415" xyz="-0.34317 -0.50021 0"/>
+        <origin rpy="0.0 0 3.1415" xyz="-0.034317 -0.050021 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="FL1">
         <visual>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
             <material name = "Orange">
                 <color rgba="1.0 0.54 0.0 1.0"/>               
             </material>   
         </visual>
         <collision>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
         </collision>
         <inertial>
@@ -77,25 +77,25 @@
         <axis xyz="1 0 0"/>
         <parent link="FL0"/>
         <child link="FL1"/>
-        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <origin rpy="0 0 0" xyz="0 0.028395 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="FL2">
         <visual>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
             <material name = "Orange">
                 <color rgba="1.0 0.54 0.0 1.0"/>               
             </material>   
         </visual>
         <collision>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
         </collision>
         <inertial>
@@ -107,7 +107,7 @@
         <axis xyz="1 0 0"/>
         <parent link="FL1"/>
         <child link="FL2"/>
-        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <origin rpy="0 0 0" xyz="0 0.06 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="-0.4"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
@@ -121,7 +121,7 @@
         <visual name="FLRubberEnd">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
             <material name="White">
                 <color rgba="1.0 1.0 1.0 1.0"/>
@@ -130,12 +130,12 @@
         <collision>
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
         </collision>
     </link>
     <joint name="FLEJ" type="fixed">
-        <origin xyz="0.0 1.04 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.104 0.0" rpy="0.0 0.0 0.0"/>
         <parent link="FL2"/>
         <child link="FLE"/>
     </joint>
@@ -144,18 +144,18 @@
     <!-- Front Right Leg  -->
     <link name="FR0">
         <visual>
-            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <origin xyz="0 0.021567 0" rpy="0.0 1.571 0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
             <material name = "Green">
                 <color rgba="0 1 0.0 1.0"/>               
             </material>   
         </visual>
         <collision>
-            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <origin xyz="0 0.021567 0" rpy="0.0 1.571 0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
         </collision>
         <inertial>
@@ -167,25 +167,25 @@
         <axis xyz="0 0 1"/>
         <parent link="SpiderBody"/>
         <child link="FR0"/>
-        <origin rpy="0.0 0 0" xyz="-0.34317 0.50021 0"/>
+        <origin rpy="0.0 0 0" xyz="-0.034317 0.050021 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="FR1">
         <visual>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
             <material name = "Green">
                 <color rgba="0 1 0.0 1.0"/>               
             </material>  
         </visual>
         <collision>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
         </collision>
         <inertial>
@@ -197,25 +197,25 @@
         <axis xyz="1 0 0"/>
         <parent link="FR0"/>
         <child link="FR1"/>
-        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <origin rpy="0 0 0" xyz="0 0.028395 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="FR2">
         <visual>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
             <material name = "Green">
                 <color rgba="0 1 0.0 1.0"/>               
             </material>   
         </visual>
         <collision>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
         </collision>
         <inertial>
@@ -227,7 +227,7 @@
         <axis xyz="1 0 0"/>
         <parent link="FR1"/>
         <child link="FR2"/>
-        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <origin rpy="0 0 0" xyz="0 0.06 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="-0.4"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
@@ -241,7 +241,7 @@
         <visual name="FRRubberEnd">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
             <material name="White">
                 <color rgba="1.0 1.0 1.0 1.0"/>
@@ -250,12 +250,12 @@
         <collision>
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
         </collision>
     </link>
     <joint name="FREJ" type="fixed">
-        <origin xyz="0.0 1.04 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.104 0.0" rpy="0.0 0.0 0.0"/>
         <parent link="FR2"/>
         <child link="FRE"/>
     </joint>
@@ -263,18 +263,18 @@
     <!-- Back Left Leg  -->
     <link name="BL0">
         <visual>
-            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <origin xyz="0 0.021567 0" rpy="0.0 1.571 0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
             <material name = "Gold">
                 <color rgba="1 1 0.0 1.0"/>               
             </material>   
         </visual>
         <collision>
-            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <origin xyz="0 0.021567 0" rpy="0.0 1.571 0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
         </collision>
         <inertial>
@@ -286,25 +286,25 @@
         <axis xyz="0 0 1"/>
         <parent link="SpiderBody"/>
         <child link="BL0"/>
-        <origin rpy="0.0 0 3.1415" xyz="0.34317 -0.50021 0"/>
+        <origin rpy="0.0 0 3.1415" xyz="0.034317 -0.050021 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="BL1">
         <visual>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
             <material name = "Gold">
                 <color rgba="1 1 0.0 1.0"/>               
             </material>    
         </visual>
         <collision>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
         </collision>
         <inertial>
@@ -316,25 +316,25 @@
         <axis xyz="1 0 0"/>
         <parent link="BL0"/>
         <child link="BL1"/>
-        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <origin rpy="0 0 0" xyz="0 0.028395 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="BL2">
         <visual>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
             <material name = "Gold">
                 <color rgba="1 1 0.0 1.0"/>               
             </material>     
         </visual>
         <collision>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
         </collision>
         <inertial>
@@ -346,7 +346,7 @@
         <axis xyz="1 0 0"/>
         <parent link="BL1"/>
         <child link="BL2"/>
-        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <origin rpy="0 0 0" xyz="0 0.06 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="-0.4"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
@@ -360,7 +360,7 @@
         <visual name="BLRubberEnd">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
             <material name="White">
                 <color rgba="1.0 1.0 1.0 1.0"/>
@@ -369,12 +369,12 @@
         <collision>
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
         </collision>
     </link>
     <joint name="BLEJ" type="fixed">
-        <origin xyz="0.0 1.04 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.104 0.0" rpy="0.0 0.0 0.0"/>
         <parent link="BL2"/>
         <child link="BLE"/>
     </joint>
@@ -382,18 +382,18 @@
     <!-- Back Right Leg  -->
     <link name="BR0">
         <visual>
-            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <origin xyz="0 0.021567 0" rpy="0.0 1.571 0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
             <material name = "Purple">
                 <color rgba="0.522 0 1 1.0"/>               
             </material>   
         </visual>
         <collision>
-            <origin xyz="0 0.21567 0" rpy="0.0 1.571 0"/>
+            <origin xyz="0 0.021567 0" rpy="0.0 1.571 0"/>
             <geometry>
-                <box size="0.3683 0.43134 0.127"/>
+                <box size="0.03683 0.043134 0.0127"/>
             </geometry>
         </collision>
         <inertial>
@@ -405,25 +405,25 @@
         <axis xyz="0 0 -1"/>
         <parent link="SpiderBody"/>
         <child link="BR0"/>
-        <origin rpy="0.0 0 0" xyz="0.34317 0.50021 0"/>
+        <origin rpy="0.0 0 0" xyz="0.034317 0.050021 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="BR1">
         <visual>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
             <material name = "Purple">
                 <color rgba="0.522 0 1 1.0"/>               
             </material>      
         </visual>
         <collision>
-            <origin xyz="0 0.325 0" rpy="0.0 1.571 0.0"/>
+            <origin xyz="0 0.0325 0" rpy="0.0 1.571 0.0"/>
             <geometry>
-                <box size="0.127 0.6541 0.381"/>
+                <box size="0.0127 0.06541 0.0381"/>
             </geometry>
         </collision>
         <inertial>
@@ -435,25 +435,25 @@
         <axis xyz="1 0 0"/>
         <parent link="BR0"/>
         <child link="BR1"/>
-        <origin rpy="0 0 0" xyz="0 0.28395 0"/>
+        <origin rpy="0 0 0" xyz="0 0.028395 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="1.571"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
 
     <link name="BR2">
         <visual>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
             <material name = "Purple">
                 <color rgba="0.522 0 1 1.0"/>               
             </material>    
         </visual>
         <collision>
-            <origin xyz="0 0.52 0" rpy="1.571 0 0"/>
+            <origin xyz="0 0.052 0" rpy="1.571 0 0"/>
             <geometry>
-                <cylinder radius=".08" length="1.04"/>
+                <cylinder radius=".008" length="0.104"/>
             </geometry>
         </collision>
         <inertial>
@@ -465,7 +465,7 @@
         <axis xyz="1 0 0"/>
         <parent link="BR1"/>
         <child link="BR2"/>
-        <origin rpy="0 0 0" xyz="0 0.6 0"/>
+        <origin rpy="0 0 0" xyz="0 0.06 0"/>
         <limit effort="100" velocity="100" lower="-1.571" upper="-0.4"/>
         <joint_properties damping="0.0" friction="0.0"/>
     </joint>
@@ -479,7 +479,7 @@
         <visual name="BRRubberEnd">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
             <material name="White">
                 <color rgba="1.0 1.0 1.0 1.0"/>
@@ -488,16 +488,44 @@
         <collision>
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <sphere radius="0.08"/>
+                <sphere radius="0.008"/>
             </geometry>
         </collision>
     </link>
     <joint name="BREJ" type="fixed">
-        <origin xyz="0.0 1.04 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.104 0.0" rpy="0.0 0.0 0.0"/>
         <parent link="BR2"/>
         <child link="BRE"/>
     </joint>
 
+    <!-- Servo Weights -->
+    <link name="Servo0">
+        <inertial>
+            <mass value="0.0134"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+        <visual name="">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <box size="0.0228 0.0122 0.0285"/>
+            </geometry>
+            <material name="Black">
+                <color rgba="0.0 0.0 0.0 1.0"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <box size="0.0228 0.0122 0.0285"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="S0J" type="fixed">
+        <origin rpy="0.0 0.0 0.0" xyz="-0.034317 -0.048021 0"/>
+        <parent link="SpiderBody"/>
+        <child link="Servo0"/>
+    </joint>
 
 
 </robot>

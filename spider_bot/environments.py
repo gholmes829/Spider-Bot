@@ -29,6 +29,7 @@ class SpiderBotSimulator(Env):
         
         self.plane_id = pb.loadURDF('plane.urdf')  # basic floor
         self.spider = SpiderBot(spider_bot_model_path)
+        self.max_spider_vel = 5
         
         spider_pos = self.spider.get_pos()
         self.camera = Camera(initial_pos = spider_pos)
@@ -42,17 +43,22 @@ class SpiderBotSimulator(Env):
         self.observation_space = spaces.Box(
             low = np.array([
                     *np.full(12, -self.spider.max_joint_angle),
-                    *np.full(12, -self.spider.nominal_joint_velocity)
+                    *np.full(12, -self.spider.nominal_joint_velocity),
+                    *np.full(3, -2*np.pi),
+                    *np.full(3, -self.max_spider_vel)
                 ]),
             high = np.array([
                     *np.full(12, self.spider.max_joint_angle),
-                    *np.full(12, self.spider.nominal_joint_velocity)
+                    *np.full(12, self.spider.nominal_joint_velocity),
+                    *np.full(3, 2*np.pi),
+                    *np.full(3, self.max_spider_vel)
                 ]),
         )
 
         self.initial_position = self.spider.get_pos()
         self.last_position = None
         self.curr_position = self.initial_position
+        self.velocity = np.zeros(3)
         
         self.i = 0
         self.t = 0
@@ -69,6 +75,7 @@ class SpiderBotSimulator(Env):
         pb.stepSimulation()
         pb.performCollisionDetection()
         self.current_position = self.spider.get_pos()
+        self.velocity = self.current_position - self.last_position
         
         if not self.fast_mode:
             time.sleep(1 / 240)
@@ -83,9 +90,12 @@ class SpiderBotSimulator(Env):
         
     def get_observation(self) -> np.array:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
+        orientation = self.spider.get_orientation()
         return np.array([
             *joint_info['pos'],
-            *joint_info['vel']
+            *joint_info['vel'],
+            *orientation,
+            *self.velocity
         ])
 
     def get_distance_from_start(self):
@@ -97,7 +107,7 @@ class SpiderBotSimulator(Env):
         
         This means the score will be highest when moving in the right direction, irregardless of speed.
         """
-        velocity = (self.current_position - self.last_position)[:2]
+        velocity = self.velocity[:2]
         origin_to_bot = (self.last_position - self.initial_position)[:2]
         
         if not (origin_to_bot * velocity).sum():  # rewarded if moving
@@ -131,7 +141,7 @@ class SpiderBotSimulator(Env):
     
     def spider_is_standing(self):
         # returns !(there exists some point of contact involving a spider link thats not an outer leg)
-        return not any([p[3] not in self.spider.ankles for p in pb.getContactPoints(self.spider.id, self.plane_id)])
+        return not any([p[3] not in self.spider.ankles + self.spider.outer_joints for p in pb.getContactPoints(self.spider.id, self.plane_id)])
         
     def close(self) -> None:
         pb.disconnect()

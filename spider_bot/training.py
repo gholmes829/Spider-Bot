@@ -34,7 +34,7 @@ class Evolution:
         return ic(winner_net)
 
     def eval_genomes(self, genomes, config):
-        for genome_id, genome in tqdm(genomes):
+        for genome_id, genome in tqdm(genomes, ascii=True):
             genome.fitness = 0
             net = neat.nn.FeedForwardNetwork.create(genome, config)
-            genome.fitness = self.fitness_function(Agent(net, 24, 12))
+            genome.fitness = self.fitness_function(Agent(net, 30, 12))

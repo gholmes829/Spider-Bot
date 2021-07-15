@@ -45,7 +45,7 @@ class Driver:
         self.modes[self.mode]()
 
     def train(self) -> None:
-        ev = Evolution(self.env, self.episode, gens=10)
+        ev = Evolution(self.env, self.episode, gens=25)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
@@ -59,11 +59,11 @@ class Driver:
 
     def test(self):
         model = self.load_model("neat_model")
-        agent = Agent(model, 24, 12)
-        self.episode(agent, terminate=False, eval=True, max_steps=0)
+        agent = Agent(model, 30, 12)
+        self.episode(agent, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, terminate: bool = True, max_steps: float = 10192, logging=False, eval=False) -> None:
+    def episode(self, agent: Agent, terminate: bool = True, verbose: bool = False, max_steps: float = 5096, logging=False, eval=False) -> None:
         i = 0
         done = False
         rewards = []
@@ -87,7 +87,10 @@ class Driver:
                 i += 1
         except KeyboardInterrupt:
             self.env.close()
-
+        fitness = self.calc_fitness(rewards, i)
+        if verbose:
+            ic('Done!')
+            ic(fitness)
         if eval:
             self.graph_data(
                 np.array(joint_pos).T,
@@ -96,13 +99,15 @@ class Driver:
                 np.array(joint_torques).T
             )
             
-        return self.calc_fitness(rewards, i)
+        return fitness
     
     def preprocess(self, observation: np.ndarray) -> np.ndarray:
-        pos, vel = np.split(observation, [12])
-        normal_pos = pos / self.env.spider.max_angle_range
-        normal_vel = vel / self.env.spider.nominal_joint_velocity
-        return np.array([*normal_pos, *normal_vel])
+        joint_pos, joint_vel, orientation, vel = np.split(observation, [12, 24, 27])
+        normal_joint_pos = joint_pos / self.env.spider.max_angle_range
+        normal_joint_vel = joint_vel / self.env.spider.nominal_joint_velocity
+        normal_orientation = orientation / (2 * np.pi)
+        normal_vel = vel / self.env.max_spider_vel
+        return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
     def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
         pass

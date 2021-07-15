@@ -61,7 +61,7 @@ class SpiderBot:
         return np.array(pb.getBasePositionAndOrientation(self.id)[0])
     
     def get_orientation(self):
-        return np.array(pb.getBasePositionAndOrientation(self.id)[1])
+        return np.array(pb.getEulerFromQuaternion(pb.getBasePositionAndOrientation(self.id)[1]))
     
     def set_joint_velocities(self, joint_indices, target_velocities):
         for i, target_velocity in zip(joint_indices, target_velocities):

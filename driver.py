@@ -37,17 +37,29 @@ class Driver:
                         real_time_enabled = True if self.mode == 'test' else False, 
                         gui = True,
                         fast_mode = False if self.mode == 'test' else True)
-    
+
     def run(self) -> None:
         ic(self.mode)
         self.modes[self.mode]()
-        
-    def preprocess(self, observation: np.ndarray) -> np.ndarray:
-        pos, vel = np.split(observation, [12])
-        normal_pos = pos / (2 * np.pi)
-        normal_vel = vel / self.env.spider.nominal_joint_velocity
-        return np.array([*normal_pos, *normal_vel])
-        
+
+    def train(self) -> None:
+        ev = Evolution(self.env, gens=1)
+
+        currentdir = os.getcwd()
+        config_path = os.path.join(currentdir, 'neat/neat_config')
+
+        before_time = time.time()
+        winner_net = ev.run(config_path)
+        time_to_train = time.time() - before_time
+        print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
+
+        self.save_model(winner_net, fn="neat_model")
+
+    def test(self):
+        model = self.load_model("neat_model")
+        agent = Agent(model, 24, 12)
+        self.episode(agent, eval=True)
+
     def episode(self, agent: Agent, logging=False, eval=False) -> None:
         i = 0
         max_steps = 5096
@@ -56,7 +68,7 @@ class Driver:
         observation = self.env.reset()
         controls = agent.predict(observation)
         joint_pos, joint_vel, body_pos = [], [], []
-        
+
         try:
             while not done and i < max_steps:
                 observation, reward, done, info = self.env.step(controls)
@@ -81,19 +93,13 @@ class Driver:
             )
             
         return rewards
-        
-    def calc_fitness(agent: Agent) -> float:
-        return 0
-        
-    def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
-        pass
-    
+
     def graph_data(self, 
-                   joint_positions:  np.array, 
-                   joint_velocities: np.array,
-                   body_positions:   np.array,
-                   display_graphs:   bool = True
-                   ) -> None:
+                    joint_positions:  np.array, 
+                    joint_velocities: np.array,
+                    body_positions:   np.array,
+                    display_graphs:   bool = True
+                    ) -> None:
 
         print("positions:", joint_positions.shape)
         print("velocities:", joint_velocities.shape)
@@ -110,27 +116,19 @@ class Driver:
         ax = GraphBodyTrajectory(body_positions)
         plt.savefig(os.path.join(self.paths['figures'], 'body_position'))
         if display_graphs: plt.show()
-
-
-        
-    def train(self) -> None:
-        ev = Evolution(self.env, gens=1)
-
-        currentdir = os.getcwd()
-        config_path = os.path.join(currentdir, 'neat/neat_config')
-
-        before_time = time.time()
-        winner_net = ev.run(config_path)
-        time_to_train = time.time() - before_time
-        print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
-
-        self.save_model(winner_net, fn="neat_model")
-
-    def test(self):
-        model = self.load_model("neat_model")
-        agent = Agent(model, 24, 12)
-        self.episode(agent)
     
+    def preprocess(self, observation: np.ndarray) -> np.ndarray:
+        pos, vel = np.split(observation, [12])
+        normal_pos = pos / (2 * np.pi)
+        normal_vel = vel / self.env.spider.nominal_joint_velocity
+        return np.array([*normal_pos, *normal_vel])
+
+    def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
+        pass
+
+    def calc_fitness(agent: Agent) -> float: # not currently used at all
+        return 0
+
     def save_model(self, model, fn: str = "model") -> None:
         with open(f'neat/{fn}.pickle', 'wb') as f:
             pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)

@@ -62,7 +62,7 @@ class Driver:
 
     def episode(self, agent: Agent, logging=False, eval=False) -> None:
         i = 0
-        max_steps = 5096
+        max_steps = 10192
         done = False
         rewards = []
         observation = self.env.reset()

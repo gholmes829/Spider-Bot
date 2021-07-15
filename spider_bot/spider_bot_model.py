@@ -27,7 +27,7 @@ class SpiderBot:
         self.reset_joints_state(self.middle_joints, np.full(4, -1))
         self.reset_joints_state(self.inner_joints, np.full(4, 1))
         
-        self.change_lateral_friction(self.outer_joints, np.full(4, 1))
+        self.change_lateral_friction(self.outer_joints, np.full(4, 5))
         self.set_max_joint_velocities(self.joints_flat, np.full(12, self.nominal_joint_velocity))
         
         # JOINT INDICES

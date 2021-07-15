@@ -26,7 +26,6 @@ class Evolution:
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(5))
 
         winner = p.run(self.eval_genomes, self.generations)
         print('\nBest genome:\n{!s}'.format(winner.fitness))

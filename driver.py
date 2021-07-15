@@ -108,7 +108,7 @@ class Driver:
         pass
 
     def calc_fitness(self, rewards: list, steps: int) -> float:
-        return sum(rewards) + (steps ** 0.25)
+        return sum(rewards)
 
     def save_model(self, model, fn: str = "model") -> None:
         with open(f'neat/{fn}.pickle', 'wb') as f:

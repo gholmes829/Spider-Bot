@@ -52,7 +52,9 @@ def GraphJointVelocities(velocities: np.array, location: str) -> plt.Axes:
 
 def GraphJointData(data: np.array, 
                    title: str, 
-                   subtitles: list = ["Inner Joints", "Middle Joints", "Outer Joints"]
+                   subtitles: list = ["Inner Joints", "Middle Joints", "Outer Joints"],
+                   ymin = None,
+                   ymax = None
                    ) -> plt.Axes:
     """
     Creates 3 sets of subplots, each 2x2, of joint data.
@@ -66,8 +68,10 @@ def GraphJointData(data: np.array,
     axs = gs.subplots()
     
     x = np.linspace(0, data[0].size, num=data[0].size)
-    ymax = data[np.where(data == data.max())] * 1.05
-    ymin = data[np.where(data == data.min())] * 1.05
+    if ymax is None:
+        ymax = data[np.where(data == data.max())] * 1.05
+    if ymin is None:
+        ymin = data[np.where(data == data.min())] * 1.05
 
     index = 0
     for i in range(3):

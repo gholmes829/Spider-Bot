@@ -33,11 +33,11 @@ class Driver:
         self.paths = {
             'models' :     os.path.join(self.cwd, 'models'),
             'figures':     os.path.join(self.cwd, 'figures'),
-            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v0.urdf')
+            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf')
         }
         self.env = SpiderBotSimulator(self.paths['spider-urdf'],
                         real_time_enabled = True if self.mode == 'test' else False, 
-                        gui = True,
+                        gui = self.mode == 'test',
                         fast_mode = False if self.mode == 'test' else True)
 
     def run(self) -> None:
@@ -45,7 +45,7 @@ class Driver:
         self.modes[self.mode]()
 
     def train(self) -> None:
-        ev = Evolution(self.env, self.episode, gens=100)
+        ev = Evolution(self.env, self.episode, gens=25)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
@@ -64,7 +64,7 @@ class Driver:
 
     def episode(self, agent: Agent, logging=False, eval=False) -> None:
         i = 0
-        max_steps = 5096
+        max_steps = 10192
         done = False
         rewards = []
         observation = self.env.reset()
@@ -97,32 +97,10 @@ class Driver:
             )
             
         return self.calc_fitness(rewards)
-
-    def graph_data(self, 
-                    joint_positions:  np.array, 
-                    joint_velocities: np.array,
-                    body_positions:   np.array,
-                    joint_torques:    np.array,
-                    display_graphs:   bool = False
-                    ) -> None:
-        plt.style.use(["dark_background"])
-        plt.rcParams.update({'font.size': 6})
-
-        ax = GraphJointData(self.reorder_joints(joint_torques), "Joint Torques")
-        plt.savefig(os.path.join(self.paths['figures'], 'joint_torques'), bbox_inches="tight", pad_inches = 0.25, dpi=150)
-        if display_graphs: plt.show()
-
-        ax = GraphJointData(self.reorder_joints(joint_velocities), "Joint Velocities")
-        plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities2'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
-        if display_graphs: plt.show()
-
-        ax = GraphBodyTrajectory(body_positions)
-        plt.savefig(os.path.join(self.paths['figures'], 'body_position'))
-        if display_graphs: plt.show()
     
     def preprocess(self, observation: np.ndarray) -> np.ndarray:
         pos, vel = np.split(observation, [12])
-        normal_pos = pos / (2 * np.pi)
+        normal_pos = pos / self.env.spider.max_angle_range
         normal_vel = vel / self.env.spider.nominal_joint_velocity
         return np.array([*normal_pos, *normal_vel])
 
@@ -141,6 +119,28 @@ class Driver:
         with open(f'neat/{fn}.pickle', 'rb') as f:
             winner_net = pickle.load(f)
         return winner_net
+    
+    def graph_data(self, 
+                    joint_positions:  np.array, 
+                    joint_velocities: np.array,
+                    body_positions:   np.array,
+                    joint_torques:    np.array,
+                    display_graphs:   bool = False
+                    ) -> None:
+        plt.style.use(["dark_background"])
+        plt.rcParams.update({'font.size': 6})
+
+        ax = GraphJointData(self.reorder_joints(joint_torques), "Joint Torques")
+        plt.savefig(os.path.join(self.paths['figures'], 'joint_torques'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
+        ax = GraphJointData(self.reorder_joints(joint_velocities), "Joint Velocities")
+        plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
+        ax = GraphBodyTrajectory(body_positions)
+        plt.savefig(os.path.join(self.paths['figures'], 'body_position'))
+        if display_graphs: plt.show()
 
     def reorder_joints(self, joint_array: np.array) -> np.array:
         """ 
@@ -152,9 +152,7 @@ class Driver:
         Helps with graphing
 
         """
-        outer_joints = joint_array[self.env.spider.outer_joints]
-        middle_joints = joint_array[self.env.spider.middle_joints]
-        inner_joints = joint_array[self.env.spider.inner_joints]
+        outer_joints = joint_array[[0, 3, 6, 9]]
+        middle_joints = joint_array[[1, 4, 7, 10]]
+        inner_joints = joint_array[[2, 5, 8, 11]]
         return np.vstack((inner_joints, middle_joints, outer_joints))
-        
-        

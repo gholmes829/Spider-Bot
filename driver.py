@@ -134,6 +134,10 @@ class Driver:
         plt.savefig(os.path.join(self.paths['figures'], 'joint_torques'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
+        ax = GraphJointData(self.reorder_joints(joint_positions), "Joint Angles")#, ymin = -np.pi / 2, ymax = np.pi / 2)
+        plt.savefig(os.path.join(self.paths['figures'], 'joint_angles'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
         ax = GraphJointData(self.reorder_joints(joint_velocities), "Joint Velocities")
         plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()

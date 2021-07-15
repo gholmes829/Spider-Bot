@@ -10,6 +10,8 @@ from icecream import ic  # better printing for debugging
 import matplotlib.pyplot as plt
 import argparse
 
+from numpy.core.numeric import outer
+
 from spider_bot.environments import SpiderBotSimulator
 from spider_bot.agent import Agent
 from spider_bot.training import Evolution
@@ -67,7 +69,7 @@ class Driver:
         rewards = []
         observation = self.env.reset()
         controls = agent.predict(observation)
-        joint_pos, joint_vel, body_pos = [], [], []
+        joint_pos, joint_vel, joint_torques, body_pos = [], [], [], []
 
         try:
             while not done and i < max_steps:
@@ -79,6 +81,7 @@ class Driver:
                     joint_pos.append(info['joint-pos'])
                     joint_vel.append(info['joint-vel'])
                     body_pos.append(info['body-pos'])
+                    joint_torques.append(info['joint-torques'])
                 
                 controls = agent.predict(self.preprocess(observation))
                 i += 1
@@ -89,7 +92,8 @@ class Driver:
             self.graph_data(
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
-                np.array(body_pos).T
+                np.array(body_pos).T,
+                np.array(joint_torques).T
             )
             
         return self.calc_fitness(rewards)
@@ -98,19 +102,18 @@ class Driver:
                     joint_positions:  np.array, 
                     joint_velocities: np.array,
                     body_positions:   np.array,
-                    display_graphs:   bool = True
+                    joint_torques:    np.array,
+                    display_graphs:   bool = False
                     ) -> None:
-
-        print("positions:", joint_positions.shape)
-        print("velocities:", joint_velocities.shape)
         plt.style.use(["dark_background"])
+        plt.rcParams.update({'font.size': 6})
 
-        ax = GraphJointVelocities(joint_velocities[self.env.spider.outer_joints], 'Outer')
-        plt.savefig(os.path.join(self.paths['figures'], 'outer_joint_velocities'))
+        ax = GraphJointData(self.reorder_joints(joint_torques), "Joint Torques")
+        plt.savefig(os.path.join(self.paths['figures'], 'joint_torques'), bbox_inches="tight", pad_inches = 0.25, dpi=150)
         if display_graphs: plt.show()
 
-        ax = GraphJointVelocities(joint_velocities[self.env.spider.inner_joints], 'Inner')
-        plt.savefig(os.path.join(self.paths['figures'], 'inner_joint_velocities'))
+        ax = GraphJointData(self.reorder_joints(joint_velocities), "Joint Velocities")
+        plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities2'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
         ax = GraphBodyTrajectory(body_positions)
@@ -138,3 +141,20 @@ class Driver:
         with open(f'neat/{fn}.pickle', 'rb') as f:
             winner_net = pickle.load(f)
         return winner_net
+
+    def reorder_joints(self, joint_array: np.array) -> np.array:
+        """ 
+        Reformats an array of joint information as follows:
+        0-3: Inner joints 
+        4-7: Middle joints
+        8-11: Outer joints
+        Orange -> Green -> Yellow -> Purple
+        Helps with graphing
+
+        """
+        outer_joints = joint_array[self.env.spider.outer_joints]
+        middle_joints = joint_array[self.env.spider.middle_joints]
+        inner_joints = joint_array[self.env.spider.inner_joints]
+        return np.vstack((inner_joints, middle_joints, outer_joints))
+        
+        

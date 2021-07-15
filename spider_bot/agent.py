@@ -33,5 +33,5 @@ class Agent:
     def predict(self, observation):
         # make ai prediction based on observation
         #self.i += 1
-        return self.model.activate(observation)
-        # return 0.5 * np.cos(np.full(12, self.i / 25))
+        #return self.model.activate(observation)
+        return 0.5 * np.cos(np.full(12, 3 / 25))

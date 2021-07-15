@@ -122,10 +122,11 @@ class SpiderBotSimulator(Env):
     def get_info(self) -> dict:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
         return {
-            "body-pos":    self.spider.get_pos(),
-            "orientation": self.spider.get_orientation(),
-            "joint-pos":   joint_info['pos'],
-            "joint-vel":   joint_info['vel']
+            "body-pos":           self.spider.get_pos(),
+            "orientation":        self.spider.get_orientation(),
+            "joint-pos":          joint_info['pos'],
+            "joint-vel":          joint_info['vel'],
+            "joint-torques":      joint_info['motor_torques']
         }
     
     def spider_is_standing(self):

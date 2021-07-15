@@ -6,10 +6,13 @@ import numpy as np
 from icecream import ic
 import neat
 
+from spider_bot.agent import Agent
+
 class Evolution:
-    def __init__(self, env, gens = 100) -> None:
-        self.generations = gens
+    def __init__(self, env, fitness_function, gens = 100) -> None:
         self.env = env
+        self.fitness_function = fitness_function
+        self.generations = gens
 
     def run(self, config_file):
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -33,15 +36,6 @@ class Evolution:
             print("Genome#", genome_id, " fitness: ", end=" ")
             genome.fitness = 0
             net = neat.nn.FeedForwardNetwork.create(genome, config)
-            
-            genome.fitness += self.fitness_function(net)
-            print(genome.fitness)
 
-    def fitness_function(self, net):
-        self.env.reset()
-        observation = self.env.get_observation()
-        for i in range(int(1e4)):
-            observation, reward, done, info = self.env.step(net.activate(observation))
-            if done:
-                break
-        return reward 
+            genome.fitness = self.fitness_function(Agent(net, 24, 12))
+            print(genome.fitness)

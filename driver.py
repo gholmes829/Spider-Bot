@@ -43,7 +43,7 @@ class Driver:
         self.modes[self.mode]()
 
     def train(self) -> None:
-        ev = Evolution(self.env, gens=1)
+        ev = Evolution(self.env, self.episode, gens=100)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
@@ -92,7 +92,7 @@ class Driver:
                 np.array(body_pos).T
             )
             
-        return rewards
+        return self.calc_fitness(rewards)
 
     def graph_data(self, 
                     joint_positions:  np.array, 
@@ -126,8 +126,8 @@ class Driver:
     def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
         pass
 
-    def calc_fitness(agent: Agent) -> float: # not currently used at all
-        return 0
+    def calc_fitness(self, rewards: list) -> float:
+        return sum(rewards) / len(rewards)
 
     def save_model(self, model, fn: str = "model") -> None:
         with open(f'neat/{fn}.pickle', 'wb') as f:

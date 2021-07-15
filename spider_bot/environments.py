@@ -82,7 +82,7 @@ class SpiderBotSimulator(Env):
 
     def getDistanceFromStart(self):
         return np.sqrt( np.square(self.spider.get_pos()[0]) + np.square(self.spider.get_pos()[2]) )
-        
+
     def get_info(self) -> dict:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
         return {

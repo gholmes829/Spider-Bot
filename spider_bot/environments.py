@@ -50,7 +50,8 @@ class SpiderBotSimulator(Env):
         )
 
         self.initial_position = self.spider.get_pos()
-        self.last_position = self.spider.get_pos()
+        self.last_position = None
+        self.curr_position = self.initial_position
         
         self.i = 0
         self.t = 0
@@ -63,19 +64,17 @@ class SpiderBotSimulator(Env):
         self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
         self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
+        self.last_position = self.curr_position
         pb.stepSimulation()
         pb.performCollisionDetection()
+        self.current_position = self.spider.get_pos()
         
         if not self.fast_mode:
             time.sleep(1 / 240)
         self.i += 1
 
-        current_position = self.spider.get_pos()
-        vel = self.get_prop_vel_proj_score(current_position)
-        self.last_position = current_position
-
         observation = self.get_observation()
-        reward = vel #self.get_distance_from_start()
+        reward = self.get_prop_vel_proj_score()
         done = self.is_terminated()
         info = self.get_info()
         
@@ -91,28 +90,28 @@ class SpiderBotSimulator(Env):
     def get_distance_from_start(self):
         return np.sqrt( np.square(self.spider.get_pos()[0]) + np.square(self.spider.get_pos()[1]) )
 
-    def get_ang_vel_proj_score(self, current_position: np.ndarray) -> float:
+    def get_ang_vel_proj_score(self) -> float:
         """
         score = ammount of speed's direction that is parallel to optimal speed direction
         
         This means the score will be highest when moving in the right direction, irregardless of speed.
         """
-        velocity = (current_position - self.last_position)[0:1]
-        origin_to_bot = self.last_position[0:1] - self.initial_position[0:1]
+        velocity = (self.current_position - self.last_position)[:2]
+        origin_to_bot = (self.last_position - self.initial_position)[:2]
         
-        if not origin_to_bot.any() or not velocity.any():  # rewarded if moving
+        if not (origin_to_bot * velocity).sum():  # rewarded if moving
             return int(velocity.any())
         else:  # unit projection of velocity onto best direction
             return (velocity @ origin_to_bot) / (np.linalg.norm(origin_to_bot) * np.linalg.norm(velocity))
 
-    def get_prop_vel_proj_score(self, current_position: np.ndarray) -> float:
+    def get_prop_vel_proj_score(self) -> float:
         """
         score = speed * (ammount of speed's direction that is parallel to optimal speed direction)
         
         This means the score will be highest when moving at large speed in the right direction.
         """
-        velocity = (current_position - self.last_position)[0:1]
-        origin_to_bot = self.last_position[0:1] - self.initial_position[0:1]
+        velocity = (self.current_position - self.last_position)[:2]
+        origin_to_bot = (self.last_position - self.initial_position)[:2]
         
         if not origin_to_bot.any():  # speed
             return np.linalg.norm(velocity)

@@ -37,7 +37,7 @@ class Driver:
         }
         self.env = SpiderBotSimulator(self.paths['spider-urdf'],
                         real_time_enabled = True if self.mode == 'test' else False, 
-                        gui = True or self.mode == 'test',
+                        gui = self.mode == 'test',
                         fast_mode = False if self.mode == 'test' else True)
 
     def run(self) -> None:

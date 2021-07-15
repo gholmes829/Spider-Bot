@@ -2,6 +2,7 @@
 
 """
 
+import numpy as np
 import pybullet as pb
 import pybullet_data
 from icecream import ic
@@ -40,11 +41,11 @@ class SpiderBotSimulator(Env):
         
         self.observation_space = spaces.Box(
             low = np.array([
-                    *np.full(12, -2*np.pi),
+                    *np.full(12, -self.spider.max_joint_angle),
                     *np.full(12, -self.spider.nominal_joint_velocity)
                 ]),
             high = np.array([
-                    *np.full(12, 2*np.pi),
+                    *np.full(12, self.spider.max_joint_angle),
                     *np.full(12, self.spider.nominal_joint_velocity)
                 ]),
         )
@@ -129,7 +130,7 @@ class SpiderBotSimulator(Env):
     
     def spider_is_standing(self):
         # returns !(there exists some point of contact involving a spider link thats not an outer leg)
-        return not any([p[3] not in self.spider.outer_joints for p in pb.getContactPoints(self.spider.id, self.plane_id)])
+        return not any([p[3] not in self.spider.ankles for p in pb.getContactPoints(self.spider.id, self.plane_id)])
         
     def close(self) -> None:
         pb.disconnect()

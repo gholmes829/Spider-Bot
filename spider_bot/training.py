@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+from tqdm import tqdm
 from icecream import ic
 import neat
 
@@ -23,7 +24,9 @@ class Evolution:
         p = neat.Population(config)
 
         p.add_reporter(neat.StdOutReporter(True))
-        p.add_reporter(neat.StatisticsReporter())
+        stats = neat.StatisticsReporter()
+        p.add_reporter(stats)
+        p.add_reporter(neat.Checkpointer(5))
 
         winner = p.run(self.eval_genomes, self.generations)
         print('\nBest genome:\n{!s}'.format(winner.fitness))
@@ -32,10 +35,7 @@ class Evolution:
         return ic(winner_net)
 
     def eval_genomes(self, genomes, config):
-        for genome_id, genome in genomes:
-            print("Genome#", genome_id, " fitness: ", end=" ")
+        for genome_id, genome in tqdm(genomes):
             genome.fitness = 0
             net = neat.nn.FeedForwardNetwork.create(genome, config)
-
             genome.fitness = self.fitness_function(Agent(net, 24, 12))
-            print(genome.fitness)

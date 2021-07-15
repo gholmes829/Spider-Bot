@@ -31,11 +31,11 @@ class Driver:
         self.paths = {
             'models' :     os.path.join(self.cwd, 'models'),
             'figures':     os.path.join(self.cwd, 'figures'),
-            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v0.urdf')
+            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf')
         }
         self.env = SpiderBotSimulator(self.paths['spider-urdf'],
                         real_time_enabled = True if self.mode == 'test' else False, 
-                        gui = True,
+                        gui = self.mode == 'test',
                         fast_mode = False if self.mode == 'test' else True)
 
     def run(self) -> None:
@@ -43,7 +43,7 @@ class Driver:
         self.modes[self.mode]()
 
     def train(self) -> None:
-        ev = Evolution(self.env, self.episode, gens=100)
+        ev = Evolution(self.env, self.episode, gens=25)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
@@ -93,7 +93,29 @@ class Driver:
             )
             
         return self.calc_fitness(rewards)
+    
+    def preprocess(self, observation: np.ndarray) -> np.ndarray:
+        pos, vel = np.split(observation, [12])
+        normal_pos = pos / self.env.spider.max_angle_range
+        normal_vel = vel / self.env.spider.nominal_joint_velocity
+        return np.array([*normal_pos, *normal_vel])
 
+    def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
+        pass
+
+    def calc_fitness(self, rewards: list) -> float:
+        return sum(rewards) / len(rewards)
+
+    def save_model(self, model, fn: str = "model") -> None:
+        with open(f'neat/{fn}.pickle', 'wb') as f:
+            pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
+            print("Successfully pickled winner net")
+    
+    def load_model(self, fn: str = "model"):
+        with open(f'neat/{fn}.pickle', 'rb') as f:
+            winner_net = pickle.load(f)
+        return winner_net
+    
     def graph_data(self, 
                     joint_positions:  np.array, 
                     joint_velocities: np.array,
@@ -116,25 +138,3 @@ class Driver:
         ax = GraphBodyTrajectory(body_positions)
         plt.savefig(os.path.join(self.paths['figures'], 'body_position'))
         if display_graphs: plt.show()
-    
-    def preprocess(self, observation: np.ndarray) -> np.ndarray:
-        pos, vel = np.split(observation, [12])
-        normal_pos = pos / (2 * np.pi)
-        normal_vel = vel / self.env.spider.nominal_joint_velocity
-        return np.array([*normal_pos, *normal_vel])
-
-    def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
-        pass
-
-    def calc_fitness(self, rewards: list) -> float:
-        return sum(rewards) / len(rewards)
-
-    def save_model(self, model, fn: str = "model") -> None:
-        with open(f'neat/{fn}.pickle', 'wb') as f:
-            pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
-            print("Successfully pickled winner net")
-    
-    def load_model(self, fn: str = "model"):
-        with open(f'neat/{fn}.pickle', 'rb') as f:
-            winner_net = pickle.load(f)
-        return winner_net

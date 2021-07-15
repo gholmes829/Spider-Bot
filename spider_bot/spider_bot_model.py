@@ -2,6 +2,7 @@
 
 """
 
+from icecream import ic
 import pybullet as pb
 import numpy as np
 
@@ -10,14 +11,16 @@ class SpiderBot:
         self.model_path = model_path
         self.id = pb.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)
         self.num_joints = pb.getNumJoints(self.id)
-        
+
         # orange, green, yellow, purple        
-        self.inner_joints = [0, 3, 6, 9]
-        self.middle_joints = [1, 4, 7, 10]
-        self.outer_joints = [2, 5, 8, 11]
+        self.inner_joints = [0, 4, 8, 12]
+        self.middle_joints = [1, 5, 9, 13]
+        self.outer_joints = [2, 6, 10, 14]
+        self.ankles = [3, 7, 11, 15]
         
-        self.nominal_joint_velocity = 13.09
         self.max_joint_angle = 1.571
+        self.max_angle_range = 3.142
+        self.nominal_joint_velocity = 6  # hard code for now to improve normalization # 13.09
         
         self.joints = [self.inner_joints, self.middle_joints, self.outer_joints]
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
@@ -27,25 +30,29 @@ class SpiderBot:
         self.reset_joints_state(self.middle_joints, np.full(4, -1))
         self.reset_joints_state(self.inner_joints, np.full(4, 1))
         
-        self.change_lateral_friction(self.outer_joints, np.full(4, 5))
-        self.set_max_joint_velocities(self.joints_flat, np.full(12, self.nominal_joint_velocity))
+        self.change_lateral_friction(self.ankles, np.full(4, 2))
+        self.set_max_joint_velocities(self.joints_flat + self.ankles, np.full(12, self.nominal_joint_velocity))
         
-        # JOINT INDICES
-        # 0 is orange inner leg to body
-        # 1 is orange inner leg to middle leg
-        # 2 is orange middle leg to outer leg
-
-        # 3 is green inner leg to body
-        # 4 is green inner leg to middle leg
-        # 5 is green middle leg to outer leg
-
-        # 6 is yellow inner leg to body
-        # 7 is yellow inner leg to middle leg
-        # 8 is yellow middle leg to outer leg
-
-        # 9 is purple inner leg to body
-        # 10 is purple inner leg to middle leg
-        # 11 is purple middle leg to outer leg
+        # JOINT INDICES -- UPDATED
+        # 0 is orange inner
+        # 1 is orange middle
+        # 2 is orange outer
+        # 3 is orange ankle
+        
+        # 4 is green inner
+        # 5 is green middle
+        # 6 is green outer
+        # 7 is green ankle
+        
+        # 8 is yellow inner
+        # 9 is yellow middle
+        # 10 is yellow outer
+        # 11 is yellow ankle
+        
+        # 12 is purple inner
+        # 13 is purple middle
+        # 14 is purple outer
+        # 15 is purple ankle
         
     def get_id(self):
         return self.id

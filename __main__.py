@@ -1,6 +1,5 @@
 """Entry point to program."""
 
-import sys
 from driver import Driver
 
 

@@ -13,13 +13,14 @@ from spider_bot.spider_bot_model import SpiderBot
 from spider_bot.camera import Camera
 
 class SpiderBotSimulator(Env):
-    def __init__(self, spider_bot_model_path: str, real_time_enabled: bool = False, gui: bool = True) -> None:
+    def __init__(self, spider_bot_model_path: str, real_time_enabled: bool = False, gui: bool = True, fast_mode = False) -> None:
         Env.__init__(self)
         self.spider_bot_model_path = spider_bot_model_path
         self.real_time_enabled = real_time_enabled
         
         self.gui = gui
         self.physics_client = pb.connect(pb.GUI if self.gui else pb.DIRECT)  # pb.DIRECT for non-graphical version
+        self.fast_mode = fast_mode # no time.sleep
         pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # get default URDFs like plane   
         
         pb.setRealTimeSimulation(self.real_time_enabled)     # make simulation decoupled from <pb.stepSimulation> and based on internal asynchronous clock instead
@@ -62,10 +63,11 @@ class SpiderBotSimulator(Env):
         pb.stepSimulation()
         pb.performCollisionDetection()
         
-        time.sleep(1 / 240)
+        if not self.fast_mode:
+            time.sleep(1 / 240)
         self.i += 1
         observation = self.get_observation()
-        reward = 0
+        reward = self.getDistanceFromStart()
         done = self.is_terminated()
         info = {}
         
@@ -77,6 +79,9 @@ class SpiderBotSimulator(Env):
             *joint_info['pos'],
             *joint_info['vel']
         ])
+
+    def getDistanceFromStart(self):
+        return np.sqrt( np.square(self.spider.get_pos()[0]) + np.square(self.spider.get_pos()[2]) )
     
     def spider_is_standing(self):
         # returns !(there exists some point of contact involving a spider link thats not an outer leg)

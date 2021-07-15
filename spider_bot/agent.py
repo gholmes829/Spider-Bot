@@ -23,14 +23,15 @@ def validate_shape(f):
     return g
 
 class Agent:
-    def __init__(self, input_shape, output_shape) -> None:
+    def __init__(self, model, input_shape, output_shape) -> None:
         self.input_shape = input_shape
         self.output_shape = output_shape
+        self.model = model
         self.i = 0
     
     @validate_shape
     def predict(self, observation):    
         # make ai prediction based on observation
         self.i += 1
-        return 0.5 * np.cos(np.full(12, self.i / 25))
-        
+        return self.model.activate(observation)
+        # return 0.5 * np.cos(np.full(12, self.i / 25))

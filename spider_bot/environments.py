@@ -48,6 +48,9 @@ class SpiderBotSimulator(Env):
                     *np.full(12, self.spider.nominal_joint_velocity)
                 ]),
         )
+
+        self.initial_position = self.spider.get_pos()
+        self.last_position = self.spider.get_pos()
         
         self.i = 0
         self.t = 0
@@ -66,8 +69,13 @@ class SpiderBotSimulator(Env):
         if not self.fast_mode:
             time.sleep(1 / 240)
         self.i += 1
+
+        current_position = self.spider.get_pos()
+        vel = self.get_incremental_velocity_from_start(current_position)
+        self.last_position = current_position
+
         observation = self.get_observation()
-        reward = self.getDistanceFromStart()
+        reward = vel #self.get_distance_from_start()
         done = self.is_terminated()
         info = self.get_info()
         
@@ -80,8 +88,28 @@ class SpiderBotSimulator(Env):
             *joint_info['vel']
         ])
 
-    def getDistanceFromStart(self):
-        return np.sqrt( np.square(self.spider.get_pos()[0]) + np.square(self.spider.get_pos()[2]) )
+    def get_distance_from_start(self):
+        return np.sqrt( np.square(self.spider.get_pos()[0]) + np.square(self.spider.get_pos()[1]) )
+
+    def get_incremental_velocity_from_start(self, current_position):
+        velocity = (current_position - self.last_position)[0:1]
+
+        origin_to_bot = self.last_position[0:1] - self.initial_position[0:1]
+
+        if np.all(origin_to_bot == np.zeros(2)) and np.all(velocity == np.zeros(2)):
+            origin_to_bot_norm = np.array([0,1])
+            velocity_norm = np.array([1,0])
+        elif np.any(origin_to_bot != np.zeros(2)):
+            origin_to_bot_norm = origin_to_bot / np.linalg.norm(origin_to_bot)
+            if np.any(velocity != np.zeros(2)):
+                velocity_norm = (velocity / (np.linalg.norm(velocity)))
+            else:
+                velocity_norm = np.array([[0,-1],[1,0]]) @ origin_to_bot_norm # rotation matrix of originToBot 
+        else:
+            velocity_norm = (velocity / (np.linalg.norm(velocity)))
+            origin_to_bot_norm = velocity_norm
+        
+        return np.dot(velocity_norm, origin_to_bot_norm)
 
     def get_info(self) -> dict:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)

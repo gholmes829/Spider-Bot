@@ -60,11 +60,11 @@ class Driver:
     def test(self):
         model = self.load_model("neat_model")
         agent = Agent(model, 24, 12)
-        self.episode(agent, eval=True)
+        self.episode(agent, terminate=False, eval=True, max_steps=0)
+        print('Done!')
 
-    def episode(self, agent: Agent, logging=False, eval=False) -> None:
+    def episode(self, agent: Agent, terminate: bool = True, max_steps: float = 10192, logging=False, eval=False) -> None:
         i = 0
-        max_steps = 10192
         done = False
         rewards = []
         observation = self.env.reset()
@@ -72,7 +72,7 @@ class Driver:
         joint_pos, joint_vel, joint_torques, body_pos = [], [], [], []
 
         try:
-            while not done and i < max_steps:
+            while not terminate or (not done and (not max_steps or i < max_steps)):
                 observation, reward, done, info = self.env.step(controls)
                 rewards.append(reward)
                 if logging:

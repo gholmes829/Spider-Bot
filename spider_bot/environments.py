@@ -61,9 +61,9 @@ class SpiderBotSimulator(Env):
         if self.gui:
             self.update_camera()
         
-        self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
-        self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
-        self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
+        #self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
+        #self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
+        #self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
         self.last_position = self.curr_position
         pb.stepSimulation()

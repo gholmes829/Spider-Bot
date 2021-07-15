@@ -7,7 +7,7 @@ import pybullet as pb
 import numpy as np
 
 class SpiderBot:
-    def __init__(self, model_path: str, initial_pos: tuple = (0, 0, 1.5625)) -> None:
+    def __init__(self, model_path: str, initial_pos: tuple = (0, 0, 0.2625)) -> None:
         self.model_path = model_path
         self.id = pb.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)
         self.num_joints = pb.getNumJoints(self.id)

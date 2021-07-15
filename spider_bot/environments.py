@@ -164,12 +164,12 @@ class SpiderBotSimulator(Env):
         keys = pb.getKeyboardEvents()
         if keys and verbose: ic(keys)  # display keys that got pressed to see their id easily 
         
-        self.camera.change_x(int(bool(keys.get(65306))) * (0.25 if keys.get(65296) else -0.25 if keys.get(65295) else 0))
-        self.camera.change_y(int(bool(keys.get(65306))) * (0.25 if keys.get(65297) else -0.25 if keys.get(65298) else 0))
-        self.camera.change_global_z(0.25 if keys.get(97) else -0.25 if keys.get(100) else 0)
+        self.camera.change_x(int(bool(keys.get(65306))) * (0.1 if keys.get(65296) else -0.25 if keys.get(65295) else 0))
+        self.camera.change_y(int(bool(keys.get(65306))) * (0.1 if keys.get(65297) else -0.25 if keys.get(65298) else 0))
+        self.camera.change_global_z(0.25 if keys.get(97) else -0.1 if keys.get(100) else 0)
         self.camera.change_yaw(int(not keys.get(65306)) * (1 if keys.get(65296) else -1 if keys.get(65295) else 0))
         self.camera.change_pitch(int(not keys.get(65306)) * (1 if keys.get(65298) else -1 if keys.get(65297) else 0))
-        self.camera.change_zoom(0.25 if keys.get(113) else -0.25 if keys.get(101) else 0)
+        self.camera.change_zoom(0.25 if keys.get(113) else -0.1 if keys.get(101) else 0)
             
         
         if keys.get(99) == 3:

@@ -23,7 +23,7 @@ class Camera:
         self.pos_func = lambda: self.pos
         self.yaw = 10
         self.pitch = -15
-        self.dist = 5
+        self.dist = 1
         self.target_lock = False
         
         self.rotate_cw = rotation_generator(-90)
@@ -62,7 +62,7 @@ class Camera:
         
     def track_target(self, pos_func):
         self.pos_func = pos_func
-        self.dist = 5
+        self.dist = 1
         
     def clear_target(self):
         self.pos_func = lambda: self.pos
@@ -72,6 +72,6 @@ class Camera:
         self.pos_func = lambda: self.pos
         self.yaw = 10
         self.pitch = -15
-        self.dist = 5
+        self.dist = 1
         self.target_lock = False
         

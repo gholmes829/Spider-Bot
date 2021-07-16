@@ -10,9 +10,6 @@ from icecream import ic  # better printing for debugging
 import matplotlib.pyplot as plt
 import argparse
 
-from types import FunctionType
-from numpy.core.numeric import outer
-
 from spider_bot.environments import SpiderBotSimulator
 from spider_bot.agent import Agent
 from spider_bot.training import Evolution

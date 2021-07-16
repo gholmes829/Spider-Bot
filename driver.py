@@ -33,6 +33,7 @@ class Driver:
             'figures':     os.path.join(self.cwd, 'figures'),
             'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf')
         }
+        self.model_name = None
 
     def run(self) -> None:
         #ic(self.mode)
@@ -42,7 +43,17 @@ class Driver:
         return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
 
     def train(self) -> None:
-        ev = Evolution(self.make_env, self.episode, gens=25)
+        valid_model_name = False 
+        while not valid_model_name:
+            model_name = input("Name for this model: ") + '.pickle'
+            if os.path.isfile(os.path.join(self.paths['models'], model_name)):
+                print("That name is already being used. ")
+            else:
+                valid_model_name = True
+                self.paths['session'] = os.path.join(self.cwd, model_name)
+                self.model_name = model_name
+
+        ev = Evolution(self.make_env, self.episode, gens=1)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
@@ -52,12 +63,14 @@ class Driver:
         time_to_train = time.time() - before_time
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
-        self.save_model(winner_net, fn="neat_model")
+        self.save_model(winner_net)
         ev.close()
 
     def test(self):
+        model = self.load_model()
+        if model is None:
+            return
         env =SpiderBotSimulator(self.paths['spider-urdf'])
-        model = self.load_model("neat_model")
         agent = Agent(model, 30, 12)
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
@@ -120,15 +133,36 @@ class Driver:
     def calc_fitness(rewards: list, steps: int) -> float:
         return sum(rewards)
 
-    def save_model(self, model, fn: str = "model") -> None:
-        with open(f'neat/{fn}.pickle', 'wb') as f:
+    def save_model(self, model) -> None:
+        with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:
             pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
             print("Successfully pickled winner net")
     
     def load_model(self, fn: str = "model"):
-        with open(f'neat/{fn}.pickle', 'rb') as f:
-            winner_net = pickle.load(f)
-        return winner_net
+        models = []
+        for file in os.listdir(self.paths['models']):
+            if file.endswith(".pickle"): models.append(file)
+        num_models = len(models)
+        if num_models == 0:
+            print("No saved models. ")
+        else:
+            print()
+            msg = "Select model to use:"
+            for i, model in enumerate(models, start=1):
+                msg += "\n    " + str(i) + ") " + str(model[:-7])
+            cancelIndex = num_models + 1
+            msg += "\n    " + str(cancelIndex) + ") Cancel"
+            print(msg)
+            try:
+                index = int(input("Choice: ")) - 1
+                print(type(index))
+                if (index >= 0 and index < cancelIndex - 1):
+                    with open(os.path.join(self.paths['models'], models[index]), 'rb') as f:
+                        winner_net = pickle.load(f)
+                    return winner_net
+            except ValueError:
+                pass
+        return None
     
     def graph_data(self, 
                     joint_positions:  np.array, 
@@ -170,3 +204,29 @@ class Driver:
         middle_joints = joint_array[[1, 4, 7, 10]]
         inner_joints = joint_array[[2, 5, 8, 11]]
         return np.vstack((inner_joints, middle_joints, outer_joints))
+
+    def getValidInput(self,
+				     msg: str,
+				     dtype: any = str,
+				     lower: float = None, upper: float = None,
+				     valid: set = None,
+				     isValid: callable = None,
+				     end=None
+				     ) -> any:
+        """
+        Gets input from user constrained by parameters.
+        Parameters
+
+        """
+        while True:
+            try:
+                choice = dtype(input("\nChoice: "))
+            except ValueError:  # if type can't be properly converted into dtype
+                continue
+            if (lower is None or choice >= lower) and \
+                    (upper is None or choice <= upper) and \
+                    (valid is None or choice in valid) and \
+                    (isValid is None or isValid(choice)):
+                if end is not None:
+                    print("", end=end)
+                return choice

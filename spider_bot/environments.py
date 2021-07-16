@@ -4,6 +4,7 @@
 
 import numpy as np
 import pybullet as pb
+from pybullet_utils import bullet_client as bc
 import pybullet_data
 from icecream import ic
 import time
@@ -14,25 +15,26 @@ from spider_bot.spider_bot_model import SpiderBot
 from spider_bot.camera import Camera
 
 class SpiderBotSimulator(Env):
-    def __init__(self, spider_bot_model_path: str, real_time_enabled: bool = False, gui: bool = True, fast_mode = False) -> None:
+    def __init__(self, spider_bot_model_path: str, real_time_enabled: bool = True, gui: bool = True, fast_mode = False) -> None:
         Env.__init__(self)
         self.spider_bot_model_path = spider_bot_model_path
         self.real_time_enabled = real_time_enabled
         
         self.gui = gui
-        self.physics_client = pb.connect(pb.GUI if self.gui else pb.DIRECT)  # pb.DIRECT for non-graphical version
         self.fast_mode = fast_mode # no time.sleep
-        pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # get default URDFs like plane   
+ 
+        self.physics_client = bc.BulletClient(connection_mode=pb.GUI if self.gui else pb.DIRECT)
+        self.physics_client.setAdditionalSearchPath(pybullet_data.getDataPath())  # get default URDFs like plane   
         
-        pb.setRealTimeSimulation(self.real_time_enabled)     # make simulation decoupled from <pb.stepSimulation> and based on internal asynchronous clock instead
-        pb.setGravity(0, 0, -9.81)  # earth gravity
+        self.physics_client.setRealTimeSimulation(self.real_time_enabled)     # make simulation decoupled from <pb.stepSimulation> and based on internal asynchronous clock instead
+        self.physics_client.setGravity(0, 0, -9.81)  # earth gravity
         
-        self.plane_id = pb.loadURDF('plane.urdf')  # basic floor
-        self.spider = SpiderBot(spider_bot_model_path)
+        self.plane_id = self.physics_client.loadURDF('plane.urdf')  # basic floor
+        self.spider = SpiderBot(spider_bot_model_path, self.physics_client)
         self.max_spider_vel = 5
         
         spider_pos = self.spider.get_pos()
-        self.camera = Camera(initial_pos = spider_pos)
+        self.camera = Camera(self.physics_client, initial_pos = spider_pos)
         self.camera_tracking = False
         
         self.action_space = spaces.Box(
@@ -66,14 +68,14 @@ class SpiderBotSimulator(Env):
     def step(self, controls: list) -> tuple:
         if self.gui:
             self.update_camera()
-        
+        assert self.physics_client.getNumBodies() == 2
         self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
         self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
         self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
         self.last_position = self.curr_position
-        pb.stepSimulation()
-        pb.performCollisionDetection()
+        self.physics_client.stepSimulation()
+        self.physics_client.performCollisionDetection()
         self.current_position = self.spider.get_pos()
         self.velocity = self.current_position - self.last_position
         
@@ -141,17 +143,17 @@ class SpiderBotSimulator(Env):
     
     def spider_is_standing(self):
         # returns !(there exists some point of contact involving a spider link thats not an outer leg)
-        return not any([p[3] not in self.spider.ankles + self.spider.outer_joints for p in pb.getContactPoints(self.spider.id, self.plane_id)])
+        return not any([p[3] not in self.spider.ankles + self.spider.outer_joints for p in self.physics_client.getContactPoints(self.spider.id, self.plane_id)])
         
     def close(self) -> None:
-        pb.disconnect()
+        self.physics_client.disconnect()
         
     def is_terminated(self) -> bool:
         return not self.spider_is_standing()
         
     def reset(self) -> dict:
-        pb.removeBody(self.spider.id)
-        self.spider = SpiderBot(self.spider_bot_model_path)
+        self.physics_client.removeBody(self.spider.id)
+        self.spider = SpiderBot(self.spider_bot_model_path, self.physics_client)
         self.camera.reset()
         
         self.i = 0
@@ -171,7 +173,7 @@ class SpiderBotSimulator(Env):
         
         verbose: bool -- if true, displays current key events
         """
-        keys = pb.getKeyboardEvents()
+        keys = self.physics_client.getKeyboardEvents()
         if keys and verbose: ic(keys)  # display keys that got pressed to see their id easily 
         
         self.camera.change_x(int(bool(keys.get(65306))) * (0.1 if keys.get(65296) else -0.25 if keys.get(65295) else 0))

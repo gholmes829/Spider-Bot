@@ -10,6 +10,7 @@ from icecream import ic  # better printing for debugging
 import matplotlib.pyplot as plt
 import argparse
 
+from types import FunctionType
 from numpy.core.numeric import outer
 
 from spider_bot.environments import SpiderBotSimulator
@@ -20,8 +21,8 @@ from graphing import *
 class Driver:
     def __init__(self):
         self.modes = {
-            'test': lambda: self.test(),
-            'train': lambda: self.train()
+            'test': self.test,
+            'train': self.train
         }
         
         parser = argparse.ArgumentParser()
@@ -35,17 +36,16 @@ class Driver:
             'figures':     os.path.join(self.cwd, 'figures'),
             'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf')
         }
-        self.env = SpiderBotSimulator(self.paths['spider-urdf'],
-                        real_time_enabled = True if self.mode == 'test' else False, 
-                        gui = self.mode == 'test',
-                        fast_mode = False if self.mode == 'test' else True)
 
     def run(self) -> None:
-        ic(self.mode)
+        #ic(self.mode)
         self.modes[self.mode]()
 
+    def make_env(self):
+        return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
+
     def train(self) -> None:
-        ev = Evolution(self.env, self.episode, gens=25)
+        ev = Evolution(self.make_env, self.episode, gens=25)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
@@ -56,24 +56,31 @@ class Driver:
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
         self.save_model(winner_net, fn="neat_model")
+        ev.close()
 
     def test(self):
+        env =SpiderBotSimulator(self.paths['spider-urdf'])
         model = self.load_model("neat_model")
         agent = Agent(model, 30, 12)
-        self.episode(agent, eval=True, verbose=True, max_steps=0)
+        self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, terminate: bool = True, verbose: bool = False, max_steps: float = 5096, logging=False, eval=False) -> None:
+    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 5096, logging=False, eval=False) -> None:
         i = 0
+        if callable(env_var):
+            env = env_var()
+        else:
+            env = env_var
+            
         done = False
         rewards = []
-        observation = self.env.reset()
+        observation = env.reset()
         controls = agent.predict(observation)
         joint_pos, joint_vel, joint_torques, body_pos = [], [], [], []
 
         try:
             while not terminate or (not done and (not max_steps or i < max_steps)):
-                observation, reward, done, info = self.env.step(controls)
+                observation, reward, done, info = env.step(controls)
                 rewards.append(reward)
                 if logging:
                     self.log_state(observation, controls)
@@ -83,10 +90,10 @@ class Driver:
                     body_pos.append(info['body-pos'])
                     joint_torques.append(info['joint-torques'])
                 
-                controls = agent.predict(self.preprocess(observation))
+                controls = agent.predict(self.preprocess(observation, env))
                 i += 1
         except KeyboardInterrupt:
-            self.env.close()
+            env.close()
         fitness = self.calc_fitness(rewards, i)
         if verbose:
             ic('Done!')
@@ -101,18 +108,19 @@ class Driver:
             
         return fitness
     
-    def preprocess(self, observation: np.ndarray) -> np.ndarray:
+    def preprocess(self, observation: np.ndarray, env) -> np.ndarray:
         joint_pos, joint_vel, orientation, vel = np.split(observation, [12, 24, 27])
-        normal_joint_pos = joint_pos / self.env.spider.max_angle_range
-        normal_joint_vel = joint_vel / self.env.spider.nominal_joint_velocity
+        normal_joint_pos = joint_pos / env.spider.max_angle_range
+        normal_joint_vel = joint_vel / env.spider.nominal_joint_velocity
         normal_orientation = orientation / (2 * np.pi)
-        normal_vel = vel / self.env.max_spider_vel
+        normal_vel = vel / env.max_spider_vel
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
     def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
         pass
 
-    def calc_fitness(self, rewards: list, steps: int) -> float:
+    @staticmethod
+    def calc_fitness(rewards: list, steps: int) -> float:
         return sum(rewards)
 
     def save_model(self, model, fn: str = "model") -> None:

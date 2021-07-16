@@ -7,10 +7,11 @@ import pybullet as pb
 import numpy as np
 
 class SpiderBot:
-    def __init__(self, model_path: str, initial_pos: tuple = (0, 0, 0.1625)) -> None:
+    def __init__(self, model_path: str, physics_client, initial_pos: tuple = (0, 0, 0.1625)) -> None:
         self.model_path = model_path
-        self.id = pb.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)
-        self.num_joints = pb.getNumJoints(self.id)
+        self.physics_client = physics_client
+        self.id = self.physics_client.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)
+        self.num_joints = self.physics_client.getNumJoints(self.id)
 
         # orange, green, yellow, purple        
         self.inner_joints = [0, 4, 8, 12]
@@ -58,14 +59,14 @@ class SpiderBot:
         return self.id
     
     def get_pos(self):
-        return np.array(pb.getBasePositionAndOrientation(self.id)[0])
+        return np.array(self.physics_client.getBasePositionAndOrientation(self.id)[0])
     
     def get_orientation(self):
-        return np.array(pb.getEulerFromQuaternion(pb.getBasePositionAndOrientation(self.id)[1]))
+        return np.array(self.physics_client.getEulerFromQuaternion(self.physics_client.getBasePositionAndOrientation(self.id)[1]))
     
     def set_joint_velocities(self, joint_indices, target_velocities):
         for i, target_velocity in zip(joint_indices, target_velocities):
-            pb.setJointMotorControl2(
+            self.physics_client.setJointMotorControl2(
                 self.id,
                 i,
                 controlMode = pb.VELOCITY_CONTROL,
@@ -74,7 +75,7 @@ class SpiderBot:
             )
 
     def get_joints_state(self, joint_indices):
-        state = pb.getJointStates(self.id, joint_indices)
+        state = self.physics_client.getJointStates(self.id, joint_indices)
         return {
             'pos': [joint[0] for joint in state],
             'vel': [joint[1] for joint in state],
@@ -84,12 +85,12 @@ class SpiderBot:
         
     def reset_joints_state(self, joint_indices, target_pos):
         for i, pos in zip(joint_indices, target_pos):
-            pb.resetJointState(self.id, i, pos)
+            self.physics_client.resetJointState(self.id, i, pos)
             
     def change_lateral_friction(self, link_indices, target_lateral_frictions):
         for i, lateral_friction in zip(link_indices, target_lateral_frictions):
-            pb.changeDynamics(self.id, i, lateralFriction=lateral_friction)
+            self.physics_client.changeDynamics(self.id, i, lateralFriction=lateral_friction)
         
     def set_max_joint_velocities(self, link_indices, max_velocities):
         for i, max_joint_velocity in zip(link_indices, max_velocities):
-            pb.changeDynamics(self.id, i, maxJointVelocity=max_joint_velocity)
+            self.physics_client.changeDynamics(self.id, i, maxJointVelocity=max_joint_velocity)

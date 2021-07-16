@@ -204,29 +204,3 @@ class Driver:
         middle_joints = joint_array[[1, 4, 7, 10]]
         inner_joints = joint_array[[2, 5, 8, 11]]
         return np.vstack((inner_joints, middle_joints, outer_joints))
-
-    def getValidInput(self,
-				     msg: str,
-				     dtype: any = str,
-				     lower: float = None, upper: float = None,
-				     valid: set = None,
-				     isValid: callable = None,
-				     end=None
-				     ) -> any:
-        """
-        Gets input from user constrained by parameters.
-        Parameters
-
-        """
-        while True:
-            try:
-                choice = dtype(input("\nChoice: "))
-            except ValueError:  # if type can't be properly converted into dtype
-                continue
-            if (lower is None or choice >= lower) and \
-                    (upper is None or choice <= upper) and \
-                    (valid is None or choice in valid) and \
-                    (isValid is None or isValid(choice)):
-                if end is not None:
-                    print("", end=end)
-                return choice

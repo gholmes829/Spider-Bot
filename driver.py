@@ -85,7 +85,7 @@ class Driver:
         done = False
         rewards = []
         observation = env.reset()
-        controls = agent.predict(observation)
+        controls = agent.predict(self.preprocess(observation, env))
         joint_pos, joint_vel, joint_torques, body_pos = [], [], [], []
 
         try:

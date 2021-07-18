@@ -40,7 +40,7 @@ class Driver:
 
     def make_env(self):
         # change GUI to false here to use direct mode when training!!!
-        return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
+        return SpiderBotSimulator(self.paths['spider-urdf'], gui = True, fast_mode = True)
 
     def train(self) -> None:
         valid_model_name = False 
@@ -59,7 +59,7 @@ class Driver:
         config_path = os.path.join(currentdir, 'neat/neat_config')
 
         before_time = time.time()
-        winner_net = ev.run(config_path, parallelize=False)
+        winner_net = ev.run(config_path, parallelize=True)
         time_to_train = time.time() - before_time
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 

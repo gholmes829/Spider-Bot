@@ -2,11 +2,12 @@
 
 """
 
+from multiprocessing.context import Process
 import numpy as np
 import os
 from tqdm import tqdm
 from icecream import ic
-from multiprocessing import Pool
+import multiprocessing as mp
 import neat
 from functools import reduce
 
@@ -17,9 +18,9 @@ class Evolution:
         self.make_env = make_env
         self.fitness_function = fitness_function
         self.generations = gens
-        self.pool = Pool(maxtasksperchild=1)
+        #self.pool = Pool(maxtasksperchild=1)
         self.progress = 0
-        self.parallelize = False
+        self.parallelize = False  # initialize to false, can change in <Evolution.run>
 
     def run(self, config_file, parallelize = True):
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -50,29 +51,52 @@ class Evolution:
             agents = []
             for genome_id, genome in genomes:
                 genome.fitness = 0
-                agents.append(Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12))
-            
+                agents.append(Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id))
+            ic(f'Num agents: {len(agents)}')
             batches = np.array_split(agents, num_cores)
+            batch_sizes = [len(batch) for batch in batches]
+            ic(f'{num_cores} batches: {batch_sizes}')
             
-            fitnesses = reduce(lambda base, next: base + next, self.pool.starmap(eval_batch, [(batch, self.make_env, self.fitness_function) for i, batch in enumerate(batches)]))
+            # get workers
+            queues = [mp.Queue() for _ in range(num_cores)]
+            workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue)) for i, (queue, batch) in enumerate(zip(queues, batches))]
+            ic('Starting workers...')
+            for worker in workers: worker.start()
+            ic('Joining workers...')
+            for worker in workers: worker.join()
+            
+            ic('Getting results...')
+            results = [[queue.get() for _ in range(batch_size)] for queue, batch_size in zip(queues, batch_sizes)]
+            ic(f'{len(results)} batches of results: {[len(result) for result in results]}')
+            results_flat = reduce(lambda base, next: base + next, results)
+            ic(f'Total num of results: {len(results_flat)}')
             for i, (genome_id, genome) in enumerate(genomes):
-                genome.fitness = fitnesses[i]
+                fitness, agent_id = results_flat[i]
+                assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
+                genome.fitness = fitness
             
-            #jobs = [zip(agents[i:i + num_cores], self.envs) for i in range(0, len(agents), num_cores)]
-            #for i, job in enumerate(num_cores):
-            #    fitnesses = self.pool.starmap(self.fitness_function, job)
-            #    for j in range(6):
-            #        genomes[i * num_cores + j][1].fitness = fitnesses[j]
+            # old method
+            #fitnesses = reduce(lambda base, next: base + next, self.pool.starmap(eval_batch, [(batch, self.make_env, self.fitness_function) for i, batch in enumerate(batches)]))
+            #for i, (genome_id, genome) in enumerate(genomes):
+            #   genome.fitness = fitnesses[i]
             
         else:
             env = self.make_env()
-            for genome_id, genome in tqdm(genomes, ascii=True):
+            for genome_id, genome in tqdm(genomes, ascii=True):  # TODO: call eval_genome_batch with one batch -- entire thing
                 genome.fitness = 0
-                agent = Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12)
-                genome.fitness = self.fitness_function(agent, env, self.fitness_function)
+                agent = Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id)
+                fitness, agent_id = self.fitness_function(agent, env, self.fitness_function)
+                genome.fitness = fitness
     
-    def close(self):
-        self.pool.close()
+    @staticmethod
+    def eval_genome_batch(batch, make_env, fitness_func, queue):
+        ic(os.getpid(), len(batch))
+        env = make_env()
+        for agent in batch:
+            queue.put(fitness_func(agent, env))
+    
+    #def close(self):
+    #    self.pool.close()
         
 def eval_batch(agents, make_env, fitness_func):
     return [fitness_func(agent, make_env) for agent in agents]

@@ -21,7 +21,7 @@ class SpiderBot:
         
         self.max_joint_angle = 1.571
         self.max_angle_range = 3.142
-        self.nominal_joint_velocity = 6  # hard code for now to improve normalization # 13.09
+        self.nominal_joint_velocity = 13.09
         
         self.joints = [self.inner_joints, self.middle_joints, self.outer_joints]
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
@@ -55,6 +55,8 @@ class SpiderBot:
         # 14 is purple outer
         # 15 is purple ankle
         
+        # there may be more that are unused, check URDF
+        
     def get_id(self):
         return self.id
     
@@ -76,6 +78,7 @@ class SpiderBot:
 
     def get_joints_state(self, joint_indices):
         state = self.physics_client.getJointStates(self.id, joint_indices)
+        for i, joint in enumerate(state): assert joint[0] == np.clip(joint[0], -self.max_angle_range, self.max_angle_range), f'Joint {i} is outside expected position ({joint[0]})' 
         return {
             'pos': [joint[0] for joint in state],
             'vel': [joint[1] for joint in state],

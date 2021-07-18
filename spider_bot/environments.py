@@ -31,9 +31,10 @@ class SpiderBotSimulator(Env):
         
         self.plane_id = self.physics_client.loadURDF('plane.urdf')  # basic floor
         self.spider = SpiderBot(spider_bot_model_path, self.physics_client)
-        self.max_spider_vel = 5
         
+        self.max_spider_vel = 5
         spider_pos = self.spider.get_pos()
+        
         self.camera = Camera(self.physics_client, initial_pos = spider_pos)
         self.camera_tracking = False
         
@@ -68,11 +69,14 @@ class SpiderBotSimulator(Env):
     def step(self, controls: list) -> tuple:
         if self.gui:
             self.update_camera()
-        assert self.physics_client.getNumBodies() == 2
+        assert self.physics_client.getNumBodies() == 2  # there should only be the spider and floor, helps debug multiprocessing
+        
+        # use control outputs to move robot
         self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
         self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
         self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
+        # update state vars
         self.last_position = self.curr_position
         self.physics_client.stepSimulation()
         self.physics_client.performCollisionDetection()
@@ -99,9 +103,6 @@ class SpiderBotSimulator(Env):
             *orientation,
             *self.velocity
         ])
-
-    def get_distance_from_start(self):
-        return np.sqrt( np.square(self.spider.get_pos()[0]) + np.square(self.spider.get_pos()[1]) )
 
     def get_ang_vel_proj_score(self) -> float:
         """
@@ -142,7 +143,7 @@ class SpiderBotSimulator(Env):
         }
     
     def spider_is_standing(self):
-        # returns !(there exists some point of contact involving a spider link thats not an outer leg)
+        # returns not (there exists some point of contact involving a spider link thats not an outer leg)
         return not any([p[3] not in self.spider.ankles + self.spider.outer_joints for p in self.physics_client.getContactPoints(self.spider.id, self.plane_id)])
         
     def close(self) -> None:

@@ -18,7 +18,7 @@ from graphing import *
 class Driver:
     def __init__(self):
         self.modes = {
-            'test': self.test,
+            'test': self.test_bot,
             'train': self.train
         }
         
@@ -36,10 +36,10 @@ class Driver:
         self.model_name = None
 
     def run(self) -> None:
-        #ic(self.mode)
         self.modes[self.mode]()
 
     def make_env(self):
+        # change GUI to false here to use direct mode when training!!!
         return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
 
     def train(self) -> None:
@@ -53,20 +53,20 @@ class Driver:
                 self.paths['session'] = os.path.join(self.cwd, model_name)
                 self.model_name = model_name
 
-        ev = Evolution(self.make_env, self.episode, gens=1)
+        ev = Evolution(self.make_env, self.episode, gens=5)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
 
         before_time = time.time()
-        winner_net = ev.run(config_path)
+        winner_net = ev.run(config_path, parallelize=False)
         time_to_train = time.time() - before_time
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
         self.save_model(winner_net)
-        ev.close()
+        #ev.close()  # not needed anymore
 
-    def test(self):
+    def test_bot(self):
         model = self.load_model()
         if model is None:
             return
@@ -75,7 +75,7 @@ class Driver:
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 5096, logging=False, eval=False) -> None:
+    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 5096, eval=False) -> None:
         i = 0
         if callable(env_var):
             env = env_var()
@@ -92,8 +92,7 @@ class Driver:
             while not terminate or (not done and (not max_steps or i < max_steps)):
                 observation, reward, done, info = env.step(controls)
                 rewards.append(reward)
-                if logging:
-                    self.log_state(observation, controls)
+
                 if eval:
                     joint_pos.append(info['joint-pos'])
                     joint_vel.append(info['joint-vel'])
@@ -116,7 +115,7 @@ class Driver:
                 np.array(joint_torques).T
             )
             
-        return fitness
+        return fitness, agent.id
     
     def preprocess(self, observation: np.ndarray, env) -> np.ndarray:
         joint_pos, joint_vel, orientation, vel = np.split(observation, [12, 24, 27])
@@ -125,9 +124,6 @@ class Driver:
         normal_orientation = orientation / (2 * np.pi)
         normal_vel = vel / env.max_spider_vel
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
-
-    def log_state(self, observation: np.ndarray, controls: np.ndarray) -> None:
-        pass
 
     @staticmethod
     def calc_fitness(rewards: list, steps: int) -> float:

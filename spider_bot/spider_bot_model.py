@@ -7,7 +7,7 @@ import pybullet as pb
 import numpy as np
 
 class SpiderBot:
-    def __init__(self, model_path: str, physics_client, initial_pos: tuple = (0, 0, 0.1625)) -> None:
+    def __init__(self, model_path: str, physics_client, initial_pos: tuple = (0, 0, 0.17)) -> None:
         self.model_path = model_path
         self.physics_client = physics_client
         self.id = self.physics_client.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)
@@ -78,7 +78,7 @@ class SpiderBot:
 
     def get_joints_state(self, joint_indices):
         state = self.physics_client.getJointStates(self.id, joint_indices)
-        for i, joint in enumerate(state): assert joint[0] == np.clip(joint[0], -self.max_angle_range, self.max_angle_range), f'Joint {i} is outside expected position ({joint[0]})' 
+        #for i, joint in enumerate(state): assert joint[0] == np.clip(joint[0], -self.max_angle_range, self.max_angle_range), f'Joint {i} is outside expected position ({joint[0]})' 
         return {
             'pos': [joint[0] for joint in state],
             'vel': [joint[1] for joint in state],

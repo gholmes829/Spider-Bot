@@ -40,7 +40,7 @@ class Driver:
 
     def make_env(self):
         # change GUI to false here to use direct mode when training!!!
-        return SpiderBotSimulator(self.paths['spider-urdf'], gui = True, fast_mode = True)
+        return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
 
     def train(self) -> None:
         valid_model_name = False 
@@ -53,7 +53,7 @@ class Driver:
                 self.paths['session'] = os.path.join(self.cwd, model_name)
                 self.model_name = model_name
 
-        ev = Evolution(self.make_env, self.episode, gens=5)
+        ev = Evolution(self.make_env, self.episode, gens=10)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')
@@ -87,20 +87,25 @@ class Driver:
         observation = env.reset()
         controls = agent.predict(self.preprocess(observation, env))
         joint_pos, joint_vel, joint_torques, body_pos = [], [], [], []
-
+        body_velocity = []
+        #print('Start:', os.getpid(), agent.id, flush=True)
         try:
             while not terminate or (not done and (not max_steps or i < max_steps)):
                 observation, reward, done, info = env.step(controls)
                 rewards.append(reward)
-
+                
                 if eval:
                     joint_pos.append(info['joint-pos'])
                     joint_vel.append(info['joint-vel'])
                     body_pos.append(info['body-pos'])
                     joint_torques.append(info['joint-torques'])
+                    vel = env.velocity
+                    body_velocity.append(vel)
+                    #ic(vel)
                 
                 controls = agent.predict(self.preprocess(observation, env))
                 i += 1
+                
         except KeyboardInterrupt:
             env.close()
         fitness = self.calc_fitness(rewards, i)
@@ -114,7 +119,8 @@ class Driver:
                 np.array(body_pos).T,
                 np.array(joint_torques).T
             )
-            
+            ic(np.sum(body_velocity, axis=0))
+        #print('End:', os.getpid(), agent.id, done, flush=True)
         return fitness, agent.id
     
     def preprocess(self, observation: np.ndarray, env) -> np.ndarray:

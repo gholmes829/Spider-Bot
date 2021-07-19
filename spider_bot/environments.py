@@ -9,7 +9,9 @@ import pybullet_data
 from icecream import ic
 import time
 import numpy as np
+import gym
 from gym import spaces, Env
+gym.logger.set_level(40)
 
 from spider_bot.spider_bot_model import SpiderBot
 from spider_bot.camera import Camera
@@ -69,7 +71,8 @@ class SpiderBotSimulator(Env):
     def step(self, controls: list) -> tuple:
         if self.gui:
             self.update_camera()
-        assert self.physics_client.getNumBodies() == 2  # there should only be the spider and floor, helps debug multiprocessing
+        num_bodies = self.physics_client.getNumBodies()
+        assert num_bodies == 2, f'Expected 2, recieved {num_bodies} bodies'  # there should only be the spider and floor, helps debug multiprocessing
         
         # use control outputs to move robot
         self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])

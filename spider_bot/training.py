@@ -2,7 +2,6 @@
 
 """
 
-from multiprocessing.context import Process
 import numpy as np
 import os
 from tqdm import tqdm
@@ -10,6 +9,8 @@ from icecream import ic
 import multiprocessing as mp
 import neat
 from functools import reduce
+import psutil
+from time import sleep
 
 from spider_bot.agent import Agent
 
@@ -58,12 +59,19 @@ class Evolution:
             ic(f'{num_cores} batches: {batch_sizes}')
             
             # get workers
+            progress_queue = mp.Queue()
             queues = [mp.Queue() for _ in range(num_cores)]
-            workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue)) for i, (queue, batch) in enumerate(zip(queues, batches))]
+            workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue, progress_queue)) for i, (queue, batch) in enumerate(zip(queues, batches))]
             ic('Starting workers...')
             for worker in workers: worker.start()
+            while len(psutil.Process().children()) < num_cores:
+                ic(len(psutil.Process().children()))
+                sleep(0.1)
+            sleep(1)
+            for i in tqdm(range(len(agents))):
+                progress_queue.get()
             ic('Joining workers...')
-            for worker in workers: worker.join()
+            for worker in workers: worker.join(timeout=5)  # timeout shouldn't be needed in theory
             
             ic('Getting results...')
             results = [[queue.get() for _ in range(batch_size)] for queue, batch_size in zip(queues, batch_sizes)]
@@ -89,11 +97,12 @@ class Evolution:
                 genome.fitness = fitness
     
     @staticmethod
-    def eval_genome_batch(batch, make_env, fitness_func, queue):
+    def eval_genome_batch(batch, make_env, fitness_func, queue, progress_queue):
         ic(os.getpid(), len(batch))
         env = make_env()
         for agent in batch:
             queue.put(fitness_func(agent, env))
+            progress_queue.put(1)
     
     #def close(self):
     #    self.pool.close()

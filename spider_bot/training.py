@@ -47,7 +47,7 @@ class Evolution:
         # ToDo: get parallelization to work
         ic('Making agents...')
         if self.parallelize:
-            num_cores = os.cpu_count()
+            num_cores = psutil.cpu_count(logical=False)
             #assert num_cores == len(self.envs)
             
             agents = []
@@ -65,10 +65,12 @@ class Evolution:
             workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue, progress_queue)) for i, (queue, batch) in enumerate(zip(queues, batches))]
             ic('Starting workers...')
             for worker in workers: worker.start()
-            while len(psutil.Process().children()) < num_cores:
-                ic(len(psutil.Process().children()))
-                sleep(0.1)
-            sleep(1)
+            sleep(0.1)
+            print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...')
+            #while len(psutil.Process().children()) < num_cores:
+            #    ic(len(psutil.Process().children()))
+            #    sleep(0.1)
+            #sleep(1)
             for i in tqdm(range(len(agents)), ascii=True):
                 progress_queue.get()
             ic('Joining workers...')

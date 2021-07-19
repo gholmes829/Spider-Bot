@@ -35,7 +35,7 @@ class SpiderBot:
         self.change_lateral_friction(self.ankles, np.full(4, 2))
         self.set_max_joint_velocities(self.joints_flat + self.ankles, np.full(12, self.nominal_joint_velocity))
         
-        self.debug_joints()
+        #self.debug_joints()
         
         # JOINT INDICES -- UPDATED
         # 0 is orange inner

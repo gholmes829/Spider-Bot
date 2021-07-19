@@ -45,8 +45,9 @@ class Evolution:
 
     def eval_genomes(self, genomes, config):
         # ToDo: get parallelization to work
-        ic('Making agents...')
+        
         if self.parallelize:
+            ic('Making agents...')
             num_cores = psutil.cpu_count(logical=False)
             #assert num_cores == len(self.envs)
             
@@ -66,7 +67,7 @@ class Evolution:
             ic('Starting workers...')
             for worker in workers: worker.start()
             sleep(0.1)
-            print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...', flush=True)
+            print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...\n', flush=True)
             sleep(0.1)
             #while len(psutil.Process().children()) < num_cores:
             #    ic(len(psutil.Process().children()))
@@ -75,22 +76,18 @@ class Evolution:
             for i in tqdm(range(len(agents)), ascii=True):
                 progress_queue.get()
             ic('Joining workers...')
-            for worker in workers: worker.join(timeout=5)  # timeout shouldn't be needed in theory
+            for worker in workers: worker.join(timeout=2.5)  # timeout shouldn't be needed in theory, but seems necessary to force physics clients closed
             
             ic('Getting results...')
             results = [[queue.get() for _ in range(batch_size)] for queue, batch_size in zip(queues, batch_sizes)]
             ic(f'{len(results)} batches of results: {[len(result) for result in results]}')
             results_flat = reduce(lambda base, next: base + next, results)
-            ic(f'Total num of results: {len(results_flat)}')
+            #ic(f'Total num of results: {len(results_flat)}')
             for i, (genome_id, genome) in enumerate(genomes):
                 fitness, agent_id = results_flat[i]
                 assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
                 genome.fitness = fitness
-            
-            # old method
-            #fitnesses = reduce(lambda base, next: base + next, self.pool.starmap(eval_batch, [(batch, self.make_env, self.fitness_function) for i, batch in enumerate(batches)]))
-            #for i, (genome_id, genome) in enumerate(genomes):
-            #   genome.fitness = fitnesses[i]
+            ic(f'NEAT is evolving or something...')
             
         else:
             env = self.make_env()
@@ -107,6 +104,7 @@ class Evolution:
         for agent in batch:
             queue.put(fitness_func(agent, env))
             progress_queue.put(1)
+        env.close()
     
     #def close(self):
     #    self.pool.close()

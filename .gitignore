@@ -6,6 +6,7 @@ __pycache__/
 # Custom other
 .venv/
 .vscode/
+activate.bat
 
 # Keep empty folders if they have .gitkeep
 !**/.gitkeep

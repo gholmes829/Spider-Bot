@@ -42,7 +42,7 @@ class Agent:
         #self.i = 0
         self.id = id
     
-    @validate_shape
+    @validate_shape(terminate_on_bound_error = False)
     def predict(self, observation):
         # make ai prediction based on observation
         return self.model.activate(observation)

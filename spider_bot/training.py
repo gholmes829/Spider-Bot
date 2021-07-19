@@ -22,6 +22,7 @@ class Evolution:
         #self.pool = Pool(maxtasksperchild=1)
         self.progress = 0
         self.parallelize = False  # initialize to false, can change in <Evolution.run>
+        self.average_fitnesses = []
 
     def run(self, config_file, parallelize = True):
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -41,7 +42,7 @@ class Evolution:
         print('\nBest genome:\n{!s}'.format(winner.fitness))
 
         winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-        return ic(winner_net)
+        return ic(winner_net, self.average_fitnesses)
 
     def eval_genomes(self, genomes, config):
         # ToDo: get parallelization to work
@@ -89,19 +90,25 @@ class Evolution:
             #print(f'{len(results)} batches of results: {[len(result) for result in results]}', flush=True)
             results_flat = reduce(lambda base, next: base + next, results)
             #ic(f'Total num of results: {len(results_flat)}')
+            total_fitess = 0
             for i, (genome_id, genome) in enumerate(genomes):
                 fitness, agent_id = results_flat[i]
                 assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
                 genome.fitness = fitness
+                total_fitess += fitness 
+            self.average_fitnesses.append(total_fitess / len(genomes))
             print(f'NEAT is evolving or something...', flush=True)
             
         else:
             env = self.make_env()
+            total_fitess = 0
             for genome_id, genome in tqdm(genomes, ascii=True):  # TODO: call eval_genome_batch with one batch -- entire thing
                 genome.fitness = 0
                 agent = Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id)
                 fitness, agent_id = self.fitness_function(agent, env, self.fitness_function)
+                total_fitess += fitness
                 genome.fitness = fitness
+            self.average_fitnesses.append(total_fitess / len(genomes))
     
     @staticmethod
     def eval_genome_batch(batch, make_env, fitness_func, queue, progress_queue):

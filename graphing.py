@@ -40,22 +40,6 @@ def GraphContactData(data: np.array) -> plt.Axes:
             axs[i, j].plot(x, data[index], colors[index])
             axs[i, j].set_title(subtitles[index])
             axs[i, j].set_yticks([0, 1])
-
-    # axs[0, 0].plot(x, front_left, 'tab:orange')
-    # axs[0, 0].set_title('Front Left')
-    # #axs[0, 0].set_ylim(0, 1)
-
-    # axs[0, 1].plot(x, front_right, 'tab:green')
-    # axs[0, 1].set_title('Front Right')
-    # #axs[0, 1].set_ylim(0, 1)
-
-    # axs[1, 0].plot(x, back_left, 'tab:olive')
-    # axs[1, 0].set_title('Back Left')
-    # #axs[1, 0].set_ylim(, 3)
-
-    # axs[1, 1].plot(x, back_right, 'tab:blue')
-    # axs[1, 1].set_title('Back Right')
-    # #axs[1, 1].set_ylim(-3, 3)
     
     return axs
 
@@ -100,3 +84,14 @@ def GraphJointData(data: np.array,
             axs[a, b].remove()
     
     return axs
+
+def GraphFitness(fitnesses: np.array) -> plt.Axes:
+    fig = plt.figure()
+    ax = plt.axes()
+    x = np.linspace(0, fitnesses.size, num=fitnesses.size)
+    ax.plot(x, fitnesses)
+    ax.set_ylim(0, x.max() * 1.05)
+    ax.set_title("Fitness Over Time")
+    ax.set_xlabel("Generation")
+    ax.set_ylabel("Average Fitness")
+    return ax

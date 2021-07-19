@@ -59,10 +59,11 @@ class Driver:
         config_path = os.path.join(currentdir, 'neat/neat_config')
 
         before_time = time.time()
-        winner_net = ev.run(config_path, parallelize=True)
+        winner_net, fitnesses = ev.run(config_path, parallelize=True)
         time_to_train = time.time() - before_time
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
+        self.graph_training_data(np.array(fitnesses))
         self.save_model(winner_net)
         #ev.close()  # not needed anymore
 
@@ -70,7 +71,7 @@ class Driver:
         model = self.load_model()
         if model is None:
             return
-        env =SpiderBotSimulator(self.paths['spider-urdf'])
+        env = SpiderBotSimulator(self.paths['spider-urdf'])
         agent = Agent(model, 30, 12)
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
@@ -114,7 +115,7 @@ class Driver:
             ic('Done!')
             ic(fitness)
         if eval:
-            self.graph_data(
+            self.graph_eval_data(
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
                 np.array(body_pos).T,
@@ -168,7 +169,13 @@ class Driver:
                 pass
         return None
     
-    def graph_data(self, 
+    def graph_training_data(self, fitnesses: np.array):
+        plt.style.use(["dark_background"])
+        ax = GraphFitness(fitnesses)
+        plt.savefig(os.path.join(self.paths['figures'], 'fitness_over_time'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        plt.show()
+
+    def graph_eval_data(self, 
                     joint_positions:  np.array, 
                     joint_velocities: np.array,
                     body_positions:   np.array,

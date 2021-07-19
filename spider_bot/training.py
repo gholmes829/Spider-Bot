@@ -45,6 +45,7 @@ class Evolution:
 
     def eval_genomes(self, genomes, config):
         # ToDo: get parallelization to work
+        ic('Making agents...')
         if self.parallelize:
             num_cores = os.cpu_count()
             #assert num_cores == len(self.envs)
@@ -68,7 +69,7 @@ class Evolution:
                 ic(len(psutil.Process().children()))
                 sleep(0.1)
             sleep(1)
-            for i in tqdm(range(len(agents))):
+            for i in tqdm(range(len(agents)), ascii=True):
                 progress_queue.get()
             ic('Joining workers...')
             for worker in workers: worker.join(timeout=5)  # timeout shouldn't be needed in theory

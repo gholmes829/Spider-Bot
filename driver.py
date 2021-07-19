@@ -53,7 +53,7 @@ class Driver:
                 self.paths['session'] = os.path.join(self.cwd, model_name)
                 self.model_name = model_name
 
-        ev = Evolution(self.make_env, self.episode, gens=10)
+        ev = Evolution(self.make_env, self.episode, gens=50)
 
         currentdir = os.getcwd()
         config_path = os.path.join(currentdir, 'neat/neat_config')

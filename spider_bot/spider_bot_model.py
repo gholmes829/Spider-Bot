@@ -2,6 +2,7 @@
 
 """
 
+from ntpath import join
 from icecream import ic
 import pybullet as pb
 import numpy as np
@@ -33,6 +34,13 @@ class SpiderBot:
         
         self.change_lateral_friction(self.ankles, np.full(4, 2))
         self.set_max_joint_velocities(self.joints_flat + self.ankles, np.full(12, self.nominal_joint_velocity))
+        
+        for i in self.joints_flat:
+            joint_info = self.physics_client.getJointInfo(self.id, i)
+            index = joint_info[0]
+            name = joint_info[1]
+            limits = joint_info[8:10]
+            ic(index, name, limits)
         
         # JOINT INDICES -- UPDATED
         # 0 is orange inner

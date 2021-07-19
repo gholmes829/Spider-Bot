@@ -105,6 +105,8 @@ class Evolution:
             queue.put(fitness_func(agent, env))
             progress_queue.put(1)
         env.close()
+        while env.physics_client.isConnected():  # sleep until client disconnects
+            sleep(1)
     
     #def close(self):
     #    self.pool.close()

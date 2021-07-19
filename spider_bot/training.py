@@ -45,48 +45,55 @@ class Evolution:
 
     def eval_genomes(self, genomes, config):
         # ToDo: get parallelization to work
+        
         if self.parallelize:
-            num_cores = os.cpu_count()
+            print('Making agents...', flush=True)
+            num_cores = psutil.cpu_count(logical=False)
             #assert num_cores == len(self.envs)
             
             agents = []
             for genome_id, genome in genomes:
                 genome.fitness = 0
                 agents.append(Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id))
-            ic(f'Num agents: {len(agents)}')
+            print(f'Num agents: {len(agents)}', flush=True)
             batches = np.array_split(agents, num_cores)
             batch_sizes = [len(batch) for batch in batches]
-            ic(f'{num_cores} batches: {batch_sizes}')
+            print(f'{num_cores} batches: {batch_sizes}', flush=True)
             
             # get workers
             progress_queue = mp.Queue()
             queues = [mp.Queue() for _ in range(num_cores)]
             workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue, progress_queue)) for i, (queue, batch) in enumerate(zip(queues, batches))]
-            ic('Starting workers...')
+            print('Starting workers...', flush=True)
             for worker in workers: worker.start()
-            while len(psutil.Process().children()) < num_cores:
-                ic(len(psutil.Process().children()))
-                sleep(0.1)
-            sleep(1)
-            for i in tqdm(range(len(agents))):
+            sleep(0.1)
+            print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...\n', flush=True)
+            #sleep(0.1)
+            #while len(psutil.Process().children()) < num_cores:
+            #    ic(len(psutil.Process().children()))
+            #    sleep(0.1)
+            #sleep(1)
+            for i in tqdm(range(len(agents)), ascii=True):
                 progress_queue.get()
-            ic('Joining workers...')
-            for worker in workers: worker.join(timeout=5)  # timeout shouldn't be needed in theory
-            
-            ic('Getting results...')
+                
             results = [[queue.get() for _ in range(batch_size)] for queue, batch_size in zip(queues, batch_sizes)]
-            ic(f'{len(results)} batches of results: {[len(result) for result in results]}')
+            for queue in queues: queue.close()
+            progress_queue.close()
+                
+            print('Joining workers...', flush=True)
+            for worker in workers: worker.join(5)  # timeout shouldn't be needed in theory, but just in case physics clients get stuck
+            print(f'Worker exit codes: {[worker.exitcode for worker in workers]}', flush=True)
+            for worker in workers: worker.close()
+            print('Getting results...', flush=True)
+
+            #print(f'{len(results)} batches of results: {[len(result) for result in results]}', flush=True)
             results_flat = reduce(lambda base, next: base + next, results)
-            ic(f'Total num of results: {len(results_flat)}')
+            #ic(f'Total num of results: {len(results_flat)}')
             for i, (genome_id, genome) in enumerate(genomes):
                 fitness, agent_id = results_flat[i]
                 assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
                 genome.fitness = fitness
-            
-            # old method
-            #fitnesses = reduce(lambda base, next: base + next, self.pool.starmap(eval_batch, [(batch, self.make_env, self.fitness_function) for i, batch in enumerate(batches)]))
-            #for i, (genome_id, genome) in enumerate(genomes):
-            #   genome.fitness = fitnesses[i]
+            print(f'NEAT is evolving or something...', flush=True)
             
         else:
             env = self.make_env()
@@ -98,11 +105,19 @@ class Evolution:
     
     @staticmethod
     def eval_genome_batch(batch, make_env, fitness_func, queue, progress_queue):
-        ic(os.getpid(), len(batch))
+        print(f'New process with PID: {os.getpid()}, processing {len(batch)} agents', flush=True)
         env = make_env()
         for agent in batch:
             queue.put(fitness_func(agent, env))
             progress_queue.put(1)
+        #print(f'Process with PID {os.getpid()} is done processing...')
+        env.close()
+        #queue.close()
+        #progress_queue.close()
+        while env.physics_client.isConnected():  # sleep until client disconnects
+            #print(f'Process with PID {os.getpid()} waiting to disconnect...')
+            sleep(0.1)
+        #print(f'Process with PID {os.getpid()} is returning...')
     
     #def close(self):
     #    self.pool.close()

@@ -95,6 +95,9 @@ class SpiderBotSimulator(Env):
         done = self.is_terminated()
         info = self.get_info()
         
+        self.spider.clamp_joints(verbose=False)
+        #self.spider.debug_joints(verbose=False)
+        
         return observation, reward, done, info  # adhere to gym interface
         
     def get_observation(self) -> np.array:

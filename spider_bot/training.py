@@ -66,7 +66,8 @@ class Evolution:
             ic('Starting workers...')
             for worker in workers: worker.start()
             sleep(0.1)
-            print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...')
+            print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...', flush=True)
+            sleep(0.1)
             #while len(psutil.Process().children()) < num_cores:
             #    ic(len(psutil.Process().children()))
             #    sleep(0.1)

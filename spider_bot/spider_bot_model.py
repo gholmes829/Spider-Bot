@@ -8,7 +8,7 @@ import pybullet as pb
 import numpy as np
 
 class SpiderBot:
-    def __init__(self, model_path: str, physics_client, initial_pos: tuple = (0, 0, 0.17)) -> None:
+    def __init__(self, model_path: str, physics_client, initial_pos: tuple = (0, 0, 0.2)) -> None:
         self.model_path = model_path
         self.physics_client = physics_client
         self.id = self.physics_client.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)
@@ -35,12 +35,7 @@ class SpiderBot:
         self.change_lateral_friction(self.ankles, np.full(4, 2))
         self.set_max_joint_velocities(self.joints_flat + self.ankles, np.full(12, self.nominal_joint_velocity))
         
-        for i in self.joints_flat:
-            joint_info = self.physics_client.getJointInfo(self.id, i)
-            index = joint_info[0]
-            name = joint_info[1]
-            limits = joint_info[8:10]
-            ic(index, name, limits)
+        self.debug_joints()
         
         # JOINT INDICES -- UPDATED
         # 0 is orange inner
@@ -83,6 +78,41 @@ class SpiderBot:
                 targetVelocity = target_velocity,
                 maxVelocity = self.nominal_joint_velocity
             )
+            
+    def debug_joints(self, verbose=True, terminate=False):
+        for i in range(self.physics_client.getNumJoints(self.id)):
+            joint_info = self.physics_client.getJointInfo(self.id, i)
+            state = self.get_joints_state([i])
+            curr_pos = round(state['pos'][0], 5)
+            index = joint_info[0]
+            name = joint_info[1]
+            limits = joint_info[8:10]
+            if verbose:
+                ic(index, name, limits, curr_pos)
+            try:
+                assert round(np.clip(curr_pos, *limits), 3) == round(curr_pos, 3), f'{name, limits, curr_pos, np.clip(curr_pos, *limits)}'
+            except AssertionError as ae:
+                if terminate:
+                    raise ae
+                else:
+                    print(f'Joint pos bounds error: {ae}')
+
+    def clamp_joints(self, verbose=True):
+        for i in range(self.physics_client.getNumJoints(self.id)):
+            joint_info = self.physics_client.getJointInfo(self.id, i)
+            state = self.get_joints_state([i])
+            curr_pos = round(state['pos'][0], 5)
+            #index = joint_info[0]
+            #name = joint_info[1]
+            limits = joint_info[8:10]
+            if curr_pos < limits[0]:
+                self.reset_joints_state([i], [limits[0]])
+                if verbose:
+                    print(f'Clamping up', curr_pos, 'is less than', limits[0], flush=True)
+            elif curr_pos > limits[1]:
+                self.reset_joints_state([i], [limits[1]])
+                if verbose:
+                    print(f'Clamping down', curr_pos, 'is greater than', limits[1], flush=True)
 
     def get_joints_state(self, joint_indices):
         state = self.physics_client.getJointStates(self.id, joint_indices)

@@ -86,7 +86,7 @@ class Driver:
         rewards = []
         observation = env.reset()
         controls = agent.predict(self.preprocess(observation, env))
-        joint_pos, joint_vel, joint_torques, body_pos = [], [], [], []
+        joint_pos, joint_vel, joint_torques, body_pos, contact_data = [], [], [], [], []
 
         try:
             while not terminate or (not done and (not max_steps or i < max_steps)):
@@ -98,6 +98,7 @@ class Driver:
                     joint_vel.append(info['joint-vel'])
                     body_pos.append(info['body-pos'])
                     joint_torques.append(info['joint-torques'])
+                    contact_data.append(info['contact-data'])
                 
                 controls = agent.predict(self.preprocess(observation, env))
                 i += 1
@@ -112,7 +113,8 @@ class Driver:
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
                 np.array(body_pos).T,
-                np.array(joint_torques).T
+                np.array(joint_torques).T,
+                np.array(contact_data, dtype=int).T
             )
             
         return fitness, agent.id
@@ -165,6 +167,7 @@ class Driver:
                     joint_velocities: np.array,
                     body_positions:   np.array,
                     joint_torques:    np.array,
+                    contact_data:     list,
                     display_graphs:   bool = False
                     ) -> None:
         plt.style.use(["dark_background"])
@@ -180,6 +183,10 @@ class Driver:
 
         ax = GraphJointData(self.reorder_joints(joint_velocities), "Joint Velocities")
         plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
+        ax = GraphContactData(contact_data)
+        plt.savefig(os.path.join(self.paths['figures'], 'contact_data'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
         ax = GraphBodyTrajectory(body_positions)

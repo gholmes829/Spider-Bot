@@ -19,34 +19,43 @@ def GraphBodyTrajectory(body_pos: np.array) -> plt.Axes:
     ax.set_title("Body Position")
     return ax
 
-def GraphJointVelocities(velocities: np.array, location: str) -> plt.Axes:
+def GraphContactData(data: np.array) -> plt.Axes:
     """ 
-    Creates four 2D graphs of the velocities of each of the 
-    robots joints over time. 
+    Creates four 2D graphs of binary contact data
+    for each leg
 
     """
+    colors = ['tab:orange', 'tab:green', 'tab:olive', 'tab:blue']
+    subtitles: list = ["Front Left", "Front Right", "Back Left", "Back Right"]
 
-    front_left, front_right, back_left, back_right = velocities[0:4]
+    front_left, front_right, back_left, back_right = data[0:4]
     x = np.linspace(0, front_left.size, num=front_left.size)
 
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
-    fig.suptitle(location + " Joint Velocities")
+    fig.suptitle("Leg Contact Over Time")
 
-    axs[0, 0].plot(x, front_left, 'tab:orange')
-    axs[0, 0].set_title('Front Left')
-    axs[0, 0].set_ylim(-3, 3)
+    for i in range(2):
+        for j in range(2):
+            index = 2 * i + j
+            axs[i, j].plot(x, data[index], colors[index])
+            axs[i, j].set_title(subtitles[index])
+            axs[i, j].set_yticks([0, 1])
 
-    axs[0, 1].plot(x, front_right, 'tab:green')
-    axs[0, 1].set_title('Front Right')
-    axs[0, 1].set_ylim(-3, 3)
+    # axs[0, 0].plot(x, front_left, 'tab:orange')
+    # axs[0, 0].set_title('Front Left')
+    # #axs[0, 0].set_ylim(0, 1)
 
-    axs[1, 0].plot(x, back_left, 'tab:olive')
-    axs[1, 0].set_title('Back Left')
-    axs[1, 0].set_ylim(-3, 3)
+    # axs[0, 1].plot(x, front_right, 'tab:green')
+    # axs[0, 1].set_title('Front Right')
+    # #axs[0, 1].set_ylim(0, 1)
 
-    axs[1, 1].plot(x, back_right, 'tab:blue')
-    axs[1, 1].set_title('Back Right')
-    axs[1, 1].set_ylim(-3, 3)
+    # axs[1, 0].plot(x, back_left, 'tab:olive')
+    # axs[1, 0].set_title('Back Left')
+    # #axs[1, 0].set_ylim(, 3)
+
+    # axs[1, 1].plot(x, back_right, 'tab:blue')
+    # axs[1, 1].set_title('Back Right')
+    # #axs[1, 1].set_ylim(-3, 3)
     
     return axs
 

@@ -62,9 +62,9 @@ def GraphJointData(data: np.array,
     
     x = np.linspace(0, data[0].size, num=data[0].size)
     if ymax is None:
-        ymax = data[np.where(data == data.max())] * 1.05
+        ymax = data.max() * 1.05
     if ymin is None:
-        ymin = data[np.where(data == data.min())] * 1.05
+        ymin = data.min()
 
     index = 0
     for i in range(3):

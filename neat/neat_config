@@ -9,7 +9,7 @@ reset_on_extinction   = 0
 num_inputs              = 30
 num_hidden              = 20
 num_outputs             = 12
-initial_connection      = partial_direct 0.5
+initial_connection      = full_direct
 feed_forward            = True
 
 compatibility_disjoint_coefficient    = 1.0
@@ -63,5 +63,5 @@ species_fitness_func = max
 max_stagnation  = 15
 
 [DefaultReproduction]
-elitism            = 0
+elitism            = 2 
 survival_threshold = 0.2

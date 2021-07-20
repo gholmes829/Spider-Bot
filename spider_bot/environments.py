@@ -140,9 +140,10 @@ class SpiderBotSimulator(Env):
 
     def get_prop_vel_proj_score_gait_monitor(self) -> float:
         """
-        score = speed * (ammount of speed's direction that is parallel to optimal speed direction)
+        score = speed * (ammount of speed's direction that is parallel to optimal speed direction) * (diagonal legs are in sync)
         
-        This means the score will be highest when moving at large speed in the right direction.
+        This means the score will be highest when moving at large speed in the right direction and it is moving opposite legs in sync (ideally).
+
         """
         velocity = (self.current_position - self.last_position)[:2]
         origin_to_bot = (self.last_position - self.initial_position)[:2]

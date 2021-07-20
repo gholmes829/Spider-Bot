@@ -34,6 +34,7 @@ class Driver:
             'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf')
         }
         self.model_name = None
+        self.fitnesses = []
 
     def run(self) -> None:
         self.modes[self.mode]()
@@ -110,10 +111,13 @@ class Driver:
                 
         except KeyboardInterrupt:
             env.close()
-        fitness = self.calc_fitness(rewards, i)
+        rising_edges = env.rising_edges
+        #fitness = self.calc_fitness(rewards, i, rising_edges)
+        fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, rising_edges)
         if verbose:
             ic('Done!')
             ic(fitness)
+            ic(rising_edges)
         if eval:
             self.graph_eval_data(
                 np.array(joint_pos).T,
@@ -134,9 +138,18 @@ class Driver:
         normal_vel = vel / env.max_spider_vel
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
+    
+    #def calc_fitness(rewards: list, steps: int, rising_edges: np.array) -> float:
     @staticmethod
-    def calc_fitness(rewards: list, steps: int) -> float:
-        return sum(rewards)
+    def calc_fitness(current_pos: np.array, initial_pos: np.array, rising_edges: np.array) -> float:
+        """
+        adding 0.5 to tone down the extremity of a good or bad 
+        distribution -- distance should matter as well 
+        (maybe worth testing different values)
+
+        """
+        return np.linalg.norm((current_pos - initial_pos)[:2]) * (1 / ((np.std(rising_edges) / np.mean(rising_edges)) + 0.5)) 
+        
 
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

@@ -39,7 +39,8 @@ class SpiderBotSimulator(Env):
         
         self.camera = Camera(self.physics_client, initial_pos = spider_pos)
         self.camera_tracking = False
-        
+        self.prev_cd = [True, True, True, True]
+        self.rising_edges = np.array([0, 0, 0, 0], dtype = int)
         self.action_space = spaces.Box(
             low = np.full(12, -1),
             high = np.full(12, 1)
@@ -91,9 +92,15 @@ class SpiderBotSimulator(Env):
         self.i += 1
 
         observation = self.get_observation()
-        reward = self.get_prop_vel_proj_score_gait_monitor()
+        reward = 0#self.get_prop_vel_proj_score()
         done = self.is_terminated()
         info = self.get_info()
+
+        cd = info['contact-data']
+        for i in range(len(cd)):
+            if cd[i] == False and self.prev_cd[i] == True:
+                self.rising_edges[i] += 1
+        self.prev_cd = cd
         
         self.spider.clamp_joints(verbose=False)
         #self.spider.debug_joints(verbose=False)

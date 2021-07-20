@@ -90,7 +90,7 @@ def GraphFitness(fitnesses: np.array) -> plt.Axes:
     ax = plt.axes()
     x = np.linspace(0, fitnesses.size, num=fitnesses.size)
     ax.plot(x, fitnesses)
-    ax.set_ylim(0, x.max() * 1.05)
+    ax.set_ylim(0, fitnesses.max() * 1.05)
     ax.set_title("Fitness Over Time")
     ax.set_xlabel("Generation")
     ax.set_ylabel("Average Fitness")

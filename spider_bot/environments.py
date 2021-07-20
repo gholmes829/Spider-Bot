@@ -91,7 +91,7 @@ class SpiderBotSimulator(Env):
         self.i += 1
 
         observation = self.get_observation()
-        reward = self.get_prop_vel_proj_score()
+        reward = self.get_prop_vel_proj_score_gait_monitor()
         done = self.is_terminated()
         info = self.get_info()
         
@@ -138,10 +138,25 @@ class SpiderBotSimulator(Env):
         else:  # projection of velocity onto best direction
             return (velocity @ origin_to_bot) / np.linalg.norm(origin_to_bot)
 
+    def get_prop_vel_proj_score_gait_monitor(self) -> float:
+        """
+        score = speed * (ammount of speed's direction that is parallel to optimal speed direction)
+        
+        This means the score will be highest when moving at large speed in the right direction.
+        """
+        velocity = (self.current_position - self.last_position)[:2]
+        origin_to_bot = (self.last_position - self.initial_position)[:2]
+        cd = self.get_contact_data()
+        reward_amplifier = 2.0 if (cd[0] == cd[3] and cd[1] == cd[2] and cd[0] != cd[1]) else 0.5
+        
+        if not origin_to_bot.any():  # speed
+            return np.linalg.norm(velocity) * reward_amplifier
+        else:  # projection of velocity onto best direction
+            return ((velocity @ origin_to_bot) / np.linalg.norm(origin_to_bot)) * reward_amplifier
+
     def get_info(self) -> dict:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
-        contact_points = [p[3] for p in self.physics_client.getContactPoints(self.spider.id, self.plane_id)]
-        binary_contact_data = [15 in contact_points, 3 in contact_points, 7 in contact_points, 11 in contact_points]
+        binary_contact_data = self.get_contact_data()
         return {
             "body-pos":           self.spider.get_pos(),
             "orientation":        self.spider.get_orientation(),
@@ -150,6 +165,10 @@ class SpiderBotSimulator(Env):
             "joint-torques":      joint_info['motor_torques'],
             "contact-data":       binary_contact_data
         }
+
+    def get_contact_data(self) -> list:
+        contact_points = [p[3] for p in self.physics_client.getContactPoints(self.spider.id, self.plane_id)]
+        return [3 in contact_points, 7 in contact_points, 11 in contact_points, 15 in contact_points]
     
     def spider_is_standing(self):
         # returns not (there exists some point of contact involving a spider link thats not an outer leg)

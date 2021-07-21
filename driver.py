@@ -22,16 +22,15 @@ class Driver:
             'train': self.train
         }
         
-        parser = argparse.ArgumentParser()
-        parser.add_argument('mode', choices = self.modes.keys(), help = 'determines which mode to run')
-        args = parser.parse_args()
+        args = self.parse_args()
         self.mode = args.mode
         
         self.cwd = os.getcwd()
         self.paths = {
             'models' :     os.path.join(self.cwd, 'models'),
             'figures':     os.path.join(self.cwd, 'figures'),
-            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf')
+            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf'),
+            'checkpoints': os.path.join(self.cwd, 'checkpoints')
         }
         self.model_name = None
         self.fitnesses = []
@@ -39,11 +38,17 @@ class Driver:
     def run(self) -> None:
         self.modes[self.mode]()
 
+    def parse_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('mode', choices = self.modes.keys(), help = 'determines which mode to run')
+        args = parser.parse_args()
+        return args
+
     def make_env(self):
         # change GUI to false here to use direct mode when training!!!
         return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
 
-    def train(self) -> None:
+    def get_model_name(self):
         valid_model_name = False 
         while not valid_model_name:
             model_name = input("Name for this model: ") + '.pickle'
@@ -53,11 +58,17 @@ class Driver:
                 valid_model_name = True
                 self.paths['session'] = os.path.join(self.cwd, model_name)
                 self.model_name = model_name
-        gens = int(input("Number of generations: "))
-        ev = Evolution(self.make_env, self.episode, gens=gens)
 
-        currentdir = os.getcwd()
-        config_path = os.path.join(currentdir, 'neat/neat_config')
+    def train(self) -> None:
+        self.get_model_name()
+        gens = int(input("Number of generations: "))
+        
+        checkpoint_dir = os.path.join(self.paths['checkpoints'], self.model_name[:-7])
+        os.mkdir(checkpoint_dir) # create a directory to save checkpoints
+        
+        ev = Evolution(self.make_env, self.episode, checkpoint_dir, gens=gens)
+
+        config_path = os.path.join(self.cwd, 'neat/neat_config')
 
         before_time = time.time()
         winner_net, fitnesses = ev.run(config_path, parallelize=True)
@@ -66,7 +77,6 @@ class Driver:
 
         self.graph_training_data(np.array(fitnesses))
         self.save_model(winner_net)
-        #ev.close()  # not needed anymore
 
     def test_bot(self):
         model = self.load_model()
@@ -77,7 +87,7 @@ class Driver:
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 5096, eval=False) -> None:
+    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
         i = 0
         if callable(env_var):
             env = env_var()
@@ -90,7 +100,7 @@ class Driver:
         controls = agent.predict(self.preprocess(observation, env))
         joint_pos, joint_vel, joint_torques, body_pos, contact_data = [], [], [], [], []
         body_velocity = []
-        #print('Start:', os.getpid(), agent.id, flush=True)
+
         try:
             while not terminate or (not done and (not max_steps or i < max_steps)):
                 observation, reward, done, info = env.step(controls)
@@ -104,7 +114,6 @@ class Driver:
                     contact_data.append([int(e) for e in info['contact-data']])
                     vel = env.velocity
                     body_velocity.append(vel)
-                    #ic(vel)
                 
                 controls = agent.predict(self.preprocess(observation, env))
                 i += 1
@@ -112,27 +121,26 @@ class Driver:
         except KeyboardInterrupt:
             env.close()
         filtered_rising_edges = env.get_filtered_rising_edges()
-        #fitness = self.calc_fitness(rewards, i, rising_edges)
+
         fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
+        
         if verbose:
             ic('Done!')
             ic(fitness)
-            #ic(filtered_rising_edges)
             ic(f'Survived for {i} steps')
             ic(np.sum(env.rising_edges, axis=1))
             ic(np.sum(filtered_rising_edges, axis=1))
+            
         if eval:
-            filtered_contact_data = [[filtered_rising_edges[j][i] for j in range(4)] for i in range(len(filtered_rising_edges[0]))]
-            #ic(filtered_contact_data)
             self.graph_eval_data(
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
                 np.array(body_pos).T,
                 np.array(joint_torques).T,
-                np.array(filtered_contact_data, dtype=int).T
+                np.array(contact_data, dtype=int).T
             )
             ic(np.sum(body_velocity, axis=0))
-        #print('End:', os.getpid(), agent.id, done, flush=True)
+
         return fitness, agent.id
     
     def preprocess(self, observation: np.ndarray, env) -> np.ndarray:
@@ -144,19 +152,16 @@ class Driver:
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
     
-    #def calc_fitness(rewards: list, steps: int, rising_edges: np.array) -> float:
     @staticmethod
     def calc_fitness(current_pos: np.array, initial_pos: np.array, filtered_rising_edges: np.array) -> float:
         """
         adding 0.5 to tone down the extremity of a good or bad 
         distribution -- distance should matter as well 
         (maybe worth testing different values)
-
         """
         num_edges = [sum(leg) for leg in filtered_rising_edges]
         return np.linalg.norm((current_pos - initial_pos)[:2]) * (1 / ((np.std(num_edges) / np.mean(num_edges)) + 0.5)) 
         
-
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:
             pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)

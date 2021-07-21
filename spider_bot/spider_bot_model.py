@@ -2,7 +2,6 @@
 
 """
 
-from ntpath import join
 from icecream import ic
 import pybullet as pb
 import numpy as np

@@ -118,7 +118,7 @@ class SpiderBotSimulator(Env):
             *self.velocity
         ])
 
-    def get_filtered_rising_edges(self, min_spacing = 15):
+    def get_filtered_rising_edges(self, min_spacing = 10):
         return SpiderBotSimulator.low_pass_filter(self.rising_edges, min_spacing)
     
     @staticmethod

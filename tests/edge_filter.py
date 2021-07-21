@@ -63,10 +63,10 @@ def one_case_multiple():
     ]
     
     expected = [
-        [0 for _ in range(10)],
-        [0 for _ in range(10)],
-        [0 for _ in range(10)],
-        [0 for _ in range(10)]
+        [0 for _ in range(9)] + [1],
+        [0 for _ in range(9)] + [1],
+        [0 for _ in range(9)] + [1],
+        [0 for _ in range(9)] + [1]
     ]
     
     result = SpiderBotSimulator.low_pass_filter(data, 3)
@@ -81,10 +81,10 @@ def remove_once():
     ]
     
     expected = [
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1]
+        [0, 0, 0, 1, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 0, 0, 1]
     ]
     
     result = SpiderBotSimulator.low_pass_filter(data, 3)
@@ -100,10 +100,10 @@ def remove_at_edge():
     ]
     
     expected = [
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1]
+        [0, 0, 0, 1, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 0, 0, 1]
     ]
     
     result = SpiderBotSimulator.low_pass_filter(data, 3)

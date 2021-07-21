@@ -134,7 +134,7 @@ class SpiderBotSimulator(Env):
                     for k in range(1, min(len(data_copy[i]) - j, max_frequency + 1)):  # lets look min_spacing out to the right (or to the end of the list if not enough space)
                         if data_copy[i][j + k] == 1:  # if there is a rising edge here
                             data_copy[i][j] = -1  # replace the origin with a -1 to indicate it needs to be changed
-                            data_copy[i][j + k] = -1  # also replace current t with a -1 since it also needs to be changed
+                            break
         #ic(data_copy)
         data_copy[data_copy == -1] = 0  # replace any t with -1 to 0
         #ic(data_copy)

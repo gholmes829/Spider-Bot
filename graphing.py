@@ -14,17 +14,21 @@ def live_training_cb(axes, data: list, queue: mp.Queue):
         new_data = queue.get()
         data.append(new_data)
         n = len(data)
-        axes[0].plot(range(n), data, 'r')
+        d1, d2 = zip(*data)
+        axes[0].plot(range(n), d1, 'r')
+        axes[1].plot(range(n), d2, 'g')
         axes[0].set_xlim([0, n + 2])
         axes[1].set_xlim([0, n + 2])
     
 def make_training_fig():
     fig, axes = plt.subplots(2, sharex=True)
     
+    axes[0].set_title('Avg Fitness')
     axes[0].set_ylabel('Fitness')
     axes[0].grid(alpha=0.5)
     
-    axes[1].set_ylabel('Blank')
+    axes[1].set_title('Best Fitness')
+    axes[1].set_ylabel('Fitness')
     axes[1].grid(alpha=0.5)
     
     axes[1].set_xlabel('Generation')

@@ -91,12 +91,12 @@ class Evolution:
         self.checkpoint(best_genome, config)
         avg_fitness = total_fitess / len(genomes)
         self.average_fitnesses.append(avg_fitness)
-        self.graph.send_data(avg_fitness)
+        self.graph.send_data((avg_fitness, best_genome.fitness))
         
         test_env = self.make_env(gui=True, fast_mode=False)
-        sleep(2.5)
+
         best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
-        self.fitness_function(best_agent, test_env)
+        self.fitness_function(best_agent, test_env, verbose=True)
         
         test_env.close()
             

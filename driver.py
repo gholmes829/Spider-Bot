@@ -45,7 +45,7 @@ class Driver:
         args = parser.parse_args()
         return args
 
-    def make_env(self, gui = False, fast_mode=True):
+    def make_env(self, gui = False, fast_mode=True, verbose=False):
         # change GUI to false here to use direct mode when training!!!
         return SpiderBotSimulator(self.paths['spider-urdf'], gui = gui, fast_mode = fast_mode)
 
@@ -162,13 +162,13 @@ class Driver:
         """
         T = len(filtered_rising_edges[0])
         num_edges = [sum(leg) for leg in filtered_rising_edges]
-        target_time_per_step = 200
+        target_time_per_step = 150
         target_num_steps = T / target_time_per_step
         avg_edges_per_leg = np.mean(num_edges)
         modifier = 1
         if avg_edges_per_leg < target_num_steps:
             modifier = avg_edges_per_leg / target_num_steps
-        return np.linalg.norm((current_pos - initial_pos)[:2]) * modifier
+        return 10 * np.linalg.norm((current_pos - initial_pos)[:2]) * modifier + np.sqrt(min(100, T))
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

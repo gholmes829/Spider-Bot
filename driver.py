@@ -159,12 +159,16 @@ class Driver:
     @staticmethod
     def calc_fitness(current_pos: np.array, initial_pos: np.array, filtered_rising_edges: np.array) -> float:
         """
-        adding 0.5 to tone down the extremity of a good or bad 
-        distribution -- distance should matter as well 
-        (maybe worth testing different values)
         """
+        T = len(filtered_rising_edges[0])
         num_edges = [sum(leg) for leg in filtered_rising_edges]
-        return np.linalg.norm((current_pos - initial_pos)[:2]) * (1 / ((np.std(num_edges) / np.mean(num_edges)) + 0.5)) 
+        target_time_per_step = 200
+        target_num_steps = T / target_time_per_step
+        avg_edges_per_leg = np.mean(num_edges)
+        modifier = 1
+        if avg_edges_per_leg < target_num_steps:
+            modifier = avg_edges_per_leg / target_num_steps
+        return np.linalg.norm((current_pos - initial_pos)[:2]) * modifier
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

@@ -2,6 +2,7 @@
 
 """
 
+import os
 from typing import Callable, Any
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -26,9 +27,11 @@ def simplify_anim_cb_signature(f):
     return anim_cb
 
 class LivePlotter:
-    def __init__(self, animation_cb, make_fig) -> None:
+    def __init__(self, animation_cb, make_fig, verbose=True) -> None:
         self.queue = mp.Queue()
         self.process = mp.Process(target=self.run, args=(self.queue, animation_cb, make_fig))
+        if verbose:
+            print(f'Async plotter spawned with PID = {os.getpid()}', flush=True)
         
     def start(self):
         self.process.start()
@@ -40,7 +43,7 @@ class LivePlotter:
     def run(queue, animation_cb: Callable, make_fig: Callable):
         fig, axes = make_fig()
         data = []
-        anim  = animation.FuncAnimation(fig, animation_cb, fargs=(axes, data, queue))
+        anim  = animation.FuncAnimation(fig, animation_cb, fargs=(axes, data, queue), interval=1000)
         plt.show()
         
     def close(self):

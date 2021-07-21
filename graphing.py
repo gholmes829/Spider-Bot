@@ -2,21 +2,24 @@
 
 """
 
+import multiprocessing as mp
 import matplotlib.pyplot as plt
 import numpy as np
 
 from spider_bot import utils
 
 @utils.simplify_anim_cb_signature
-def live_training_cb(axes, data: list, queue: 'multiprocessing.Queue'):
+def live_training_cb(axes, data: list, queue: mp.Queue):
     if not queue.empty():
         new_data = queue.get()
         data.append(new_data)
-    n = len(data)
-    axes[0].plot(range(n), data, 'ro')
+        n = len(data)
+        axes[0].plot(range(n), data, 'r')
+        axes[0].set_xlim([0, n + 2])
+        axes[1].set_xlim([0, n + 2])
     
-    axes[0].set_xlim([0, n + 2])
-    axes[1].set_xlim([0, n + 2])
+def make_training_fig():
+    fig, axes = plt.subplots(2, sharex=True)
     
     axes[0].set_ylabel('Fitness')
     axes[0].grid(alpha=0.5)
@@ -25,11 +28,8 @@ def live_training_cb(axes, data: list, queue: 'multiprocessing.Queue'):
     axes[1].grid(alpha=0.5)
     
     axes[1].set_xlabel('Generation')
-    
-    plt.tight_layout()
-    
-def make_training_fig():
-    return plt.subplots(2, sharex=True)
+
+    return fig, axes
 
 def GraphBodyTrajectory(body_pos: np.array) -> plt.Axes:
     """

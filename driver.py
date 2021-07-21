@@ -45,9 +45,9 @@ class Driver:
         args = parser.parse_args()
         return args
 
-    def make_env(self):
+    def make_env(self, gui = False, fast_mode=True):
         # change GUI to false here to use direct mode when training!!!
-        return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
+        return SpiderBotSimulator(self.paths['spider-urdf'], gui = gui, fast_mode = fast_mode)
 
     def get_model_name(self):
         valid_model_name = False 

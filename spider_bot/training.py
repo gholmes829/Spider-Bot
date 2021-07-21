@@ -79,19 +79,26 @@ class Evolution:
         results_flat = reduce(lambda base, next: base + next, results)
 
         total_fitess = 0
-        best = None
+        best_genome = None
         
         for i, (genome_id, genome) in enumerate(genomes):
             fitness, agent_id = results_flat[i]
             assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
             genome.fitness = fitness
             total_fitess += fitness
-            if best is None or genome.fitness > best.fitness: best = genome
+            if best_genome is None or genome.fitness > best_genome.fitness: best_genome = genome
             
-        self.checkpoint(best, config)
+        self.checkpoint(best_genome, config)
         avg_fitness = total_fitess / len(genomes)
         self.average_fitnesses.append(avg_fitness)
         self.graph.send_data(avg_fitness)
+        
+        test_env = self.make_env(gui=True, fast_mode=False)
+        sleep(2.5)
+        best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
+        self.fitness_function(best_agent, test_env)
+        
+        test_env.close()
             
         self.current_generation += 1
     

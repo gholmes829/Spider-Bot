@@ -31,7 +31,7 @@ class SpiderBot:
         self.reset_joints_state(self.middle_joints, np.full(4, -1))
         self.reset_joints_state(self.inner_joints, np.full(4, 1))
         
-        self.change_lateral_friction(self.ankles, np.full(4, 1))
+        self.change_lateral_friction(self.ankles, np.full(4, 1.5))
         self.set_max_joint_velocities(self.joints_flat + self.ankles, np.full(12, self.nominal_joint_velocity))
         
         #self.debug_joints()

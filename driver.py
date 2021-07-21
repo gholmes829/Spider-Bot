@@ -111,20 +111,25 @@ class Driver:
                 
         except KeyboardInterrupt:
             env.close()
-        rising_edges = env.rising_edges
+        filtered_rising_edges = env.get_filtered_rising_edges()
         #fitness = self.calc_fitness(rewards, i, rising_edges)
-        fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, rising_edges)
+        fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
         if verbose:
             ic('Done!')
             ic(fitness)
-            ic(rising_edges)
+            #ic(filtered_rising_edges)
+            ic(f'Survived for {i} steps')
+            ic(np.sum(env.rising_edges, axis=1))
+            ic(np.sum(filtered_rising_edges, axis=1))
         if eval:
+            filtered_contact_data = [[bool(filtered_rising_edges[j][i]) for j in range(4)] for i in range(len(filtered_rising_edges[0]))]
+            #ic(filtered_contact_data)
             self.graph_eval_data(
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
                 np.array(body_pos).T,
                 np.array(joint_torques).T,
-                np.array(contact_data, dtype=int).T
+                np.array(filtered_contact_data, dtype=int).T
             )
             ic(np.sum(body_velocity, axis=0))
         #print('End:', os.getpid(), agent.id, done, flush=True)
@@ -141,14 +146,15 @@ class Driver:
     
     #def calc_fitness(rewards: list, steps: int, rising_edges: np.array) -> float:
     @staticmethod
-    def calc_fitness(current_pos: np.array, initial_pos: np.array, rising_edges: np.array) -> float:
+    def calc_fitness(current_pos: np.array, initial_pos: np.array, filtered_rising_edges: np.array) -> float:
         """
         adding 0.5 to tone down the extremity of a good or bad 
         distribution -- distance should matter as well 
         (maybe worth testing different values)
 
         """
-        return np.linalg.norm((current_pos - initial_pos)[:2]) * (1 / ((np.std(rising_edges) / np.mean(rising_edges)) + 0.5)) 
+        num_edges = [sum(leg) for leg in filtered_rising_edges]
+        return np.linalg.norm((current_pos - initial_pos)[:2]) * (1 / ((np.std(num_edges) / np.mean(num_edges)) + 0.5)) 
         
 
     def save_model(self, model) -> None:

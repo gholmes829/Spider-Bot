@@ -2,6 +2,7 @@
 
 """
 
+from os import stat
 import numpy as np
 import pybullet as pb
 from pybullet_utils import bullet_client as bc
@@ -65,8 +66,6 @@ class SpiderBotSimulator(Env):
                     *np.full(3, self.max_spider_vel)
                 ]),
         )
-
-
         
         self.i = 0
         self.t = 0
@@ -99,8 +98,9 @@ class SpiderBotSimulator(Env):
         info = self.get_info()
 
         cd = info['contact-data']
+        assert len(cd) == 4
         for i in range(len(cd)):
-            self.rising_edges.append(int(cd[i] == False and self.prev_cd[i]))
+            self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
         self.prev_cd = cd
         
         self.spider.clamp_joints(verbose=False)
@@ -117,6 +117,30 @@ class SpiderBotSimulator(Env):
             *orientation,
             *self.velocity
         ])
+
+    def get_filtered_rising_edges(self, min_spacing = 10):
+        return SpiderBotSimulator.low_pass_filter(self.rising_edges, min_spacing)
+    
+    @staticmethod
+    def low_pass_filter(data: list, max_frequency: int) -> list:
+        """
+        A 'low pass filter' that removes non-zero values from a non-ragged 2D list that occur with too high a frequency.
+        """
+        data_copy = np.array(data)  # copy the original into a np.array
+        #ic(data_copy)
+        for i in range(4):  # for each leg
+            for j in range(len(data_copy[i])):  # lets look at that legs rising edge data
+                if data_copy[i][j] == 1:  #  if a rising edge was detected and we havnt looked at this t yet
+                    for k in range(1, min(len(data_copy[i]) - j, max_frequency + 1)):  # lets look min_spacing out to the right (or to the end of the list if not enough space)
+                        if data_copy[i][j + k] == 1:  # if there is a rising edge here
+                            data_copy[i][j] = -1  # replace the origin with a -1 to indicate it needs to be changed
+                            data_copy[i][j + k] = -1  # also replace current t with a -1 since it also needs to be changed
+        #ic(data_copy)
+        data_copy[data_copy == -1] = 0  # replace any t with -1 to 0
+        #ic(data_copy)
+        return [list(sub_list) for sub_list in data_copy]
+        
+            
 
     def get_ang_vel_proj_score(self) -> float:
         """

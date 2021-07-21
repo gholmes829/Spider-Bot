@@ -35,12 +35,17 @@ class SpiderBotSimulator(Env):
         self.spider = SpiderBot(spider_bot_model_path, self.physics_client)
         
         self.max_spider_vel = 5
-        spider_pos = self.spider.get_pos()
         
-        self.camera = Camera(self.physics_client, initial_pos = spider_pos)
+        self.initial_position = self.spider.get_pos()
+        self.last_position = None
+        self.curr_position = self.initial_position
+        self.velocity = np.zeros(3)
+        
+        self.camera = Camera(self.physics_client, initial_pos = self.initial_position)
         self.camera_tracking = False
         self.prev_cd = [True, True, True, True]
-        self.rising_edges = np.array([0, 0, 0, 0], dtype = int)
+        self.rising_edges = [[0] for _ in range(4)]
+        
         self.action_space = spaces.Box(
             low = np.full(12, -1),
             high = np.full(12, 1)
@@ -61,10 +66,7 @@ class SpiderBotSimulator(Env):
                 ]),
         )
 
-        self.initial_position = self.spider.get_pos()
-        self.last_position = None
-        self.curr_position = self.initial_position
-        self.velocity = np.zeros(3)
+
         
         self.i = 0
         self.t = 0
@@ -98,8 +100,7 @@ class SpiderBotSimulator(Env):
 
         cd = info['contact-data']
         for i in range(len(cd)):
-            if cd[i] == False and self.prev_cd[i] == True:
-                self.rising_edges[i] += 1
+            self.rising_edges.append(int(cd[i] == False and self.prev_cd[i]))
         self.prev_cd = cd
         
         self.spider.clamp_joints(verbose=False)
@@ -195,7 +196,13 @@ class SpiderBotSimulator(Env):
         
         self.i = 0
         self.t = 0
-        # also tried using <pb.resetSimulation()> and <pb.resetBasePositionAndOrientation(self.spider.id, (0, 0, 1), (0, 0, 0, 0))>
+        self.rising_edges = [[0] for _ in range(4)]
+        self.velocity = 0
+        self.initial_position = self.spider.get_pos()
+        self.last_position = None
+        self.curr_position = self.initial_position
+        self.velocity = np.zeros(3)
+
         return self.get_observation()
         
     def update_camera(self, verbose: bool = False) -> None:

@@ -64,18 +64,13 @@ class Evolution:
             # get workers
             progress_queue = mp.Queue()
             queues = [mp.Queue() for _ in range(num_cores)]
-            workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue, progress_queue)) for i, (queue, batch) in enumerate(zip(queues, batches))]
+            workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue, progress_queue)) for queue, batch in zip(queues, batches)]
             print('Starting workers...', flush=True)
             for worker in workers: worker.start()
             sleep(0.1)
             print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...\n', flush=True)
-            #sleep(0.1)
-            #while len(psutil.Process().children()) < num_cores:
-            #    ic(len(psutil.Process().children()))
-            #    sleep(0.1)
-            #sleep(1)
-            for i in tqdm(range(len(agents)), ascii=True):
-                progress_queue.get()
+
+            for i in tqdm(range(len(agents)), ascii=True): progress_queue.get()
                 
             results = [[queue.get() for _ in range(batch_size)] for queue, batch_size in zip(queues, batch_sizes)]
             for queue in queues: queue.close()
@@ -128,7 +123,3 @@ class Evolution:
     
     #def close(self):
     #    self.pool.close()
-        
-def eval_batch(agents, make_env, fitness_func):
-    return [fitness_func(agent, make_env) for agent in agents]
-    

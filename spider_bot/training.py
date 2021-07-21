@@ -35,7 +35,6 @@ class Evolution:
 
         print("Creating Population...")
         p = neat.Population(config)
-
         p.add_reporter(neat.StdOutReporter(False))
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
@@ -43,8 +42,6 @@ class Evolution:
         self.num_workers = num_workers if num_workers > 0 else psutil.cpu_count(logical=False)
 
         winner = p.run(self.eval_genomes, self.generations)
-        print('\nBest genome:\n{!s}'.format(winner.fitness))
-
         winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
         return ic(winner_net, self.average_fitnesses)
 

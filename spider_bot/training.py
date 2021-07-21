@@ -14,6 +14,7 @@ from time import sleep
 import pickle
 
 from spider_bot.agent import Agent
+from tests.util import timed
 
 class Evolution:
     def __init__(self, make_env, fitness_function, checkpoint_dir, gens = 100) -> None:
@@ -28,6 +29,7 @@ class Evolution:
         self.average_fitnesses = []
         self.checkpoint_dir = checkpoint_dir
 
+    @timed
     def run(self, config_file, num_workers = -1):
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                             neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -42,6 +44,8 @@ class Evolution:
         self.num_workers = num_workers if num_workers > 0 else psutil.cpu_count(logical=False)
 
         winner = p.run(self.eval_genomes, self.generations)
+        print('\nBest genome:\n{!s}'.format(winner.fitness))
+
         winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
         return ic(winner_net, self.average_fitnesses)
 

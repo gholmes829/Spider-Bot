@@ -70,9 +70,8 @@ class Driver:
 
         config_path = os.path.join(self.cwd, 'neat/neat_config')
 
-        before_time = time.time()
-        winner_net, fitnesses = ev.run(config_path, parallelize=True)
-        time_to_train = time.time() - before_time
+        winner_net, fitnesses, time_to_train = ev.run(config_path)
+
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
         self.graph_training_data(np.array(fitnesses))
@@ -151,7 +150,6 @@ class Driver:
         normal_vel = vel / env.max_spider_vel
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
-    
     @staticmethod
     def calc_fitness(current_pos: np.array, initial_pos: np.array, filtered_rising_edges: np.array) -> float:
         """

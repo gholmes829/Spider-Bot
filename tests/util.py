@@ -11,5 +11,5 @@ def timed(f):
         start = time()
         out = f(*args, **kwargs)
         elapsed = time() - start
-        return out, elapsed
+        return *out, elapsed
     return g

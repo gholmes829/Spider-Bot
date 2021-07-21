@@ -4,15 +4,16 @@
 
 import os
 import pickle
-import time
 import numpy as np
 from icecream import ic  # better printing for debugging
 import matplotlib.pyplot as plt
 import argparse
 
+from spider_bot.utils import LivePlotter
 from spider_bot.environments import SpiderBotSimulator
 from spider_bot.agent import Agent
 from spider_bot.training import Evolution
+import graphing
 from graphing import *
 
 class Driver:
@@ -66,16 +67,21 @@ class Driver:
         checkpoint_dir = os.path.join(self.paths['checkpoints'], self.model_name[:-7])
         os.mkdir(checkpoint_dir) # create a directory to save checkpoints
         
-        ev = Evolution(self.make_env, self.episode, checkpoint_dir, gens=gens)
+        graph = LivePlotter(graphing.live_training_cb, graphing.make_training_fig)
+        graph.start()
+        ev = Evolution(self.make_env, self.episode, checkpoint_dir, graph, gens=gens)
 
         config_path = os.path.join(self.cwd, 'neat/neat_config')
 
-        winner_net, fitnesses, time_to_train = ev.run(config_path)
+        (winner_net, fitnesses), time_to_train = ev.run(config_path)
 
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
         self.graph_training_data(np.array(fitnesses))
         self.save_model(winner_net)
+        
+        print('Close graph to end training...')
+        graph.close()
 
     def test_bot(self):
         model = self.load_model()

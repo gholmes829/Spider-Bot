@@ -14,15 +14,16 @@ from time import sleep
 import pickle
 
 from spider_bot.agent import Agent
-from tests.util import timed
+from spider_bot.utils import timed
 
 class Evolution:
-    def __init__(self, make_env, fitness_function, checkpoint_dir, gens = 100) -> None:
+    def __init__(self, make_env, fitness_function, checkpoint_dir, graph, gens = 100) -> None:
         self.make_env = make_env
         self.fitness_function = fitness_function
         self.generations = gens
         self.current_generation = 0
-        self.num_workers = 1
+        self.num_workers = 1  # default initialization, change in <Evolution.run>
+        self.graph = graph
 
         self.progress = 0
         self.average_fitnesses = []
@@ -59,9 +60,9 @@ class Evolution:
         workers = [mp.Process(target=self.eval_genome_batch, args=(agent_batch, self.make_env, self.fitness_function, result_queue, progress_queue)) for result_queue, agent_batch in zip(result_queues, agent_batches)]
         for worker in workers: worker.start()
         
-        sleep(1)
+        sleep(0.1)
         children_found = len(psutil.Process().children())
-        if children_found != self.num_workers: print(f'WARNING: only located {children_found} out of {self.num_workers} processes...\n', flush=True)
+        if children_found != self.num_workers: print(f'WARNING: found {children_found}, expected {self.num_workers} child processes...\n', flush=True)
 
         for _ in tqdm(range(len(agents)), ascii=True): progress_queue.get()  # loading bar
             
@@ -88,7 +89,9 @@ class Evolution:
             if best is None or genome.fitness > best.fitness: best = genome
             
         self.checkpoint(best, config)
-        self.average_fitnesses.append(total_fitess / len(genomes))
+        avg_fitness = total_fitess / len(genomes)
+        self.average_fitnesses.append(avg_fitness)
+        self.graph.send_data(avg_fitness)
             
         self.current_generation += 1
     

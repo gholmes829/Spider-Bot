@@ -101,7 +101,7 @@ class Driver:
                     joint_vel.append(info['joint-vel'])
                     body_pos.append(info['body-pos'])
                     joint_torques.append(info['joint-torques'])
-                    contact_data.append(info['contact-data'])
+                    contact_data.append([int(e) for e in info['contact-data']])
                     vel = env.velocity
                     body_velocity.append(vel)
                     #ic(vel)
@@ -122,7 +122,7 @@ class Driver:
             ic(np.sum(env.rising_edges, axis=1))
             ic(np.sum(filtered_rising_edges, axis=1))
         if eval:
-            filtered_contact_data = [[bool(filtered_rising_edges[j][i]) for j in range(4)] for i in range(len(filtered_rising_edges[0]))]
+            filtered_contact_data = [[filtered_rising_edges[j][i] for j in range(4)] for i in range(len(filtered_rising_edges[0]))]
             #ic(filtered_contact_data)
             self.graph_eval_data(
                 np.array(joint_pos).T,

@@ -37,7 +37,22 @@ def GraphContactData(data: np.array) -> plt.Axes:
     for i in range(2):
         for j in range(2):
             index = 2 * i + j
-            axs[i, j].plot(x, data[index], colors[index])
+            for k, (t, point) in enumerate(zip(x[:-1], data[index][:-1])):
+                next_point = data[index][k + 1]
+
+                if point + next_point == 0:
+                    axs[i, j].plot([t, t + 1], [0, 0], colors[index])
+                elif point + next_point == 2:
+                    axs[i, j].plot([t, t + 1], [1, 1], colors[index])
+                elif point == 1 and next_point == 0:  # rising edge
+                    axs[i, j].plot([t, t + 1], [1, 1], colors[index])
+                    axs[i, j].plot([t + 1, t + 1], [1, 0], colors[index])
+                elif point == 0 and next_point == 1:  # falling edge
+                    axs[i, j].plot([t, t + 1], [0, 0], colors[index])
+                    axs[i, j].plot([t + 1, t + 1], [0, 1], colors[index])
+                else:
+                    raise ValueError(f'Invalid point, next point: {point, next_point}')
+                #axs[i, j].plot(x, data[index], colors[index])
             axs[i, j].set_title(subtitles[index])
             axs[i, j].set_yticks([0, 1])
     

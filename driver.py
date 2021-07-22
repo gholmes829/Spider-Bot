@@ -67,7 +67,7 @@ class Driver:
         checkpoint_dir = os.path.join(self.paths['checkpoints'], self.model_name[:-7])
         os.mkdir(checkpoint_dir) # create a directory to save checkpoints
         
-        graph = LivePlotter(graphing.live_training_cb, graphing.make_training_fig)
+        graph = LivePlotter(graphing.live_training_cb, graphing.initialize_axes, interval=1000)
         graph.start()
         ev = Evolution(self.make_env, self.episode, checkpoint_dir, graph, gens=gens)
 
@@ -177,7 +177,7 @@ class Driver:
         #clipped_T = min(default_min + total_steps * 10, T)
         #fitness = 1e-3 * clipped_T ** 2  # float(np.sum(steps) ** 2 + 0.1 * min(T, 100))
 
-        fitness = total_steps ** 2 + 0.05 * min(T, 200)
+        fitness = 1e-3 * T * total_steps ** 2
         if verbose:
             ic(steps)
             ic(total_steps)

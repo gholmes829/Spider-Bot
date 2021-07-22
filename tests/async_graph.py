@@ -17,14 +17,16 @@ else:
     
 from spider_bot import utils
 
-def animation_cb(frame, axes, data, queue):
+def animation_cb(frame, axes, memory: dict, queue):
     if not queue.empty():
         new_data = queue.get()
-        data.append(new_data)
-    n = len(data)
-    axes[0].plot(range(n), data, 'ro')
+        memory['data'].append(new_data)
+        data = memory['data']
+        n = len(data)
+        axes[0].plot(range(n), data, 'ro')
 
-def make_fig():
+def make_fig(memory: dict):
+    memory['data'] = []
     return plt.subplots(2, sharex=True)
 
 def main():

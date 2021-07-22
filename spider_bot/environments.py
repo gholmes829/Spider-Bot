@@ -91,7 +91,7 @@ class SpiderBotSimulator(Env):
         self.velocity = self.current_position - self.last_position
         
         if not self.fast_mode:
-            time.sleep(1 / 240)
+            time.sleep(1 / 256)
         self.i += 1
 
         observation = self.get_observation()

@@ -10,7 +10,7 @@ import multiprocessing as mp
 import neat
 from functools import reduce
 import psutil
-from time import sleep
+from time import sleep, time
 import pickle
 
 from spider_bot.agent import Agent
@@ -50,7 +50,8 @@ class Evolution:
         winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
         return ic(winner_net, self.average_fitnesses)
 
-    def eval_genomes(self, genomes, config):        
+    def eval_genomes(self, genomes, config):
+        timer = time()        
         for genome_id, genome in genomes: genome.fitness = 0
         agents = [Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id) for genome_id, genome in genomes]
         agent_batches = np.array_split(agents, self.num_workers)
@@ -91,7 +92,9 @@ class Evolution:
         self.checkpoint(best_genome, config)
         avg_fitness = total_fitess / len(genomes)
         self.average_fitnesses.append(avg_fitness)
-        self.graph.send_data((avg_fitness, best_genome.fitness))
+        
+        elapsed = time() - timer
+        self.graph.send_data({'average_fitness': avg_fitness, 'best_fitness': best_genome.fitness, 'time_elapsed': elapsed})
         
         test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
 

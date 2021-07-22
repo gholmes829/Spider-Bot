@@ -7,31 +7,58 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from spider_bot import utils
-
+ 
 @utils.simplify_anim_cb_signature
-def live_training_cb(axes, data: list, queue: mp.Queue):
+def live_training_cb(axes, memory: dict, queue: mp.Queue):
     if not queue.empty():
         new_data = queue.get()
-        data.append(new_data)
-        n = len(data)
-        d1, d2 = zip(*data)
-        axes[0].plot(range(n), d1, 'r')
-        axes[1].plot(range(n), d2, 'g')
+        for key, item in new_data.items(): memory[key].append(item)
+        
+        average_fitness = memory['average_fitness']
+        best_fitness = memory['best_fitness']
+        time_elapsed = memory['time_elapsed']
+        
+        assert len(average_fitness) == len(best_fitness) == len(time_elapsed)
+        
+        n = len(average_fitness)
+        
+        axes[0].plot(range(n), average_fitness, 'r', label='Average')
+        axes[0].plot(range(n), best_fitness, 'g', label='Best')
+        
+        axes[1].plot(range(n), time_elapsed, 'cyan')
+        
         axes[0].set_xlim([0, n + 2])
         axes[1].set_xlim([0, n + 2])
+        
+        axes[0].set_ylim([0, 1.33 * max(best_fitness)])
+        axes[1].set_ylim([0, 1.33 * max(time_elapsed)])
     
-def make_training_fig():
-    fig, axes = plt.subplots(2, sharex=True)
+def initialize_axes(memory: dict):
+    plt.style.use('dark_background')
+    memory['average_fitness'] = [0]
+    memory['best_fitness'] = [0]
+    memory['time_elapsed'] = [0]
     
-    axes[0].set_title('Avg Fitness')
+    fig, axes = plt.subplots(2)
+    
+    axes[0].plot([0], [0], 'r', label='Average')
+    axes[0].plot([0], [0], 'g', label='Best')
+    axes[1].plot([0], [0], 'cyan')
+    
+    axes[0].set_title('Fitnesses')
     axes[0].set_ylabel('Fitness')
-    axes[0].grid(alpha=0.5)
+    axes[0].grid(alpha=0.25, ls='--')
+    axes[0].set_xlabel('Generations')
+    axes[0].legend(loc="upper left")
+    axes[0].set_xlim([0, 2])
+    axes[0].set_ylim([0, 1])
     
-    axes[1].set_title('Best Fitness')
-    axes[1].set_ylabel('Fitness')
-    axes[1].grid(alpha=0.5)
-    
-    axes[1].set_xlabel('Generation')
+    axes[1].set_title('Time Elapsed')
+    axes[1].set_ylabel('Time (secs)')
+    axes[1].grid(alpha=0.25, ls='--')
+    axes[1].set_xlabel('Generations')
+    axes[1].set_xlim([0, 2])
+    axes[1].set_ylim([0, 1])
 
     plt.tight_layout()
 

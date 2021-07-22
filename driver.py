@@ -92,7 +92,7 @@ class Driver:
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
+    def episode(self, agent: Agent, env_var, terminate: bool = False, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
         i = 0
         if callable(env_var):
             env = env_var()
@@ -127,8 +127,8 @@ class Driver:
         except KeyboardInterrupt:
             env.close()
         filtered_rising_edges = env.get_filtered_rising_edges()
-
-        fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
+        ic(env.steps)
+        fitness = sum(env.steps)#self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
 
         if verbose:
             num_edges = [sum(leg) for leg in filtered_rising_edges]

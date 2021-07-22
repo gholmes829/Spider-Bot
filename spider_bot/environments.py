@@ -44,7 +44,10 @@ class SpiderBotSimulator(Env):
         self.camera = Camera(self.physics_client, initial_pos = self.initial_position)
         self.camera_tracking = False
         self.prev_cd = [True, True, True, True]
+        self.is_stepping = [False, False, False, False]
+        self.height_threshold = 0.03
         self.rising_edges = [[0] for _ in range(4)]
+        self.steps = [-1 for _ in range(4)]
         
         self.action_space = spaces.Box(
             low = np.full(12, -1),
@@ -97,13 +100,28 @@ class SpiderBotSimulator(Env):
         info = self.get_info()
 
         cd = info['contact-data']
+        ankle_heights = np.array(info['ankle-pos']).T[2]
+
         assert len(cd) == 4
         for i in range(len(cd)):
             self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
+            if self.is_stepping[i] and cd[i] and not self.prev_cd[i]: # spider is stepping and just touched ground again
+                self.is_stepping[i] = False 
+                self.steps[i] += 1
+                #self.has_stepped[i] = 
+            #not (cd[i] and not self.prev_cd[i]) # reset step once foot touches ground
         self.prev_cd = cd
-        
+
+        for i, height in enumerate(ankle_heights):
+            if height > self.height_threshold and not self.is_stepping[i]: 
+                #self.steps[i] += 1
+                self.is_stepping[i] = True
+        print(self.steps)
+        # ankle_pos = info['ankle-pos']
+        # for pos in ankle_pos:
+        #     ic(pos)
+        #     pb.addUserDebugLine([pos[0], pos[1], 0], pos, lineColorRGB = [1, 0, 0], lifeTime=0.1)
         self.spider.clamp_joints(verbose=False)
-        #self.spider.debug_joints(verbose=False)
         
         return observation, reward, done, info  # adhere to gym interface
         
@@ -221,6 +239,7 @@ class SpiderBotSimulator(Env):
         self.i = 0
         self.t = 0
         self.rising_edges = [[0] for _ in range(4)]
+        self.steps = [0 for _ in range(4)]
         self.velocity = 0
         self.initial_position = self.spider.get_pos()
         self.last_position = None

@@ -45,7 +45,7 @@ class SpiderBotSimulator(Env):
         self.camera_tracking = False
         self.prev_cd = [True, True, True, True]
         self.has_stepped = [False, False, False, False]
-        self.height_threshold = 0.05
+        self.height_threshold = 0.03
         self.rising_edges = [[0] for _ in range(4)]
         self.steps = [0 for _ in range(4)]
         
@@ -105,15 +105,19 @@ class SpiderBotSimulator(Env):
         assert len(cd) == 4
         for i in range(len(cd)):
             self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
-            self.has_stepped[i] = not (cd[i] and not self.prev_cd[i])
+            if self.has_stepped[i]: self.has_stepped[i] = not (cd[i] and not self.prev_cd[i]) # reset step once foot touches ground
         self.prev_cd = cd
 
         for i, height in enumerate(ankle_heights):
-            if height > self.height_threshold and not self.has_stepped[i]: self.steps[i] += 1
-        #ic(self.has_stepped, self.steps, cd, ankle_heights)
+            if height > self.height_threshold and not self.has_stepped[i]: 
+                self.steps[i] += 1
+                self.has_stepped[i] = True
 
+        # ankle_pos = info['ankle-pos']
+        # for pos in ankle_pos:
+        #     ic(pos)
+        #     pb.addUserDebugLine([pos[0], pos[1], 0], pos, lineColorRGB = [1, 0, 0], lifeTime=0.1)
         self.spider.clamp_joints(verbose=False)
-        #self.spider.debug_joints(verbose=False)
         
         return observation, reward, done, info  # adhere to gym interface
         

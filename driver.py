@@ -127,8 +127,8 @@ class Driver:
         except KeyboardInterrupt:
             env.close()
         filtered_rising_edges = env.get_filtered_rising_edges()
-        steps = env.steps
-        fitness = sum(steps)#self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
+        ic(env.steps)
+        fitness = sum(env.steps)#self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
 
         if verbose:
             ic('Done!')

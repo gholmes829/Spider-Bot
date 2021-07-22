@@ -101,7 +101,7 @@ class SpiderBotSimulator(Env):
 
         cd = info['contact-data']
         ankle_heights = np.array(info['ankle-pos']).T[2]
-
+        #ic(np.round(ankle_heights, 2))
         assert len(cd) == 4
         for i in range(len(cd)):
             self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
@@ -133,31 +133,7 @@ class SpiderBotSimulator(Env):
             *joint_info['vel'],
             *orientation,
             *self.velocity
-        ])
-
-    def get_filtered_rising_edges(self, min_spacing = 25):
-        return SpiderBotSimulator.low_pass_filter(self.rising_edges, min_spacing)
-    
-    @staticmethod
-    def low_pass_filter(data: list, max_frequency: int) -> list:
-        """
-        A 'low pass filter' that removes non-zero values from a non-ragged 2D list that occur with too high a frequency.
-        """
-        data_copy = np.array(data)  # copy the original into a np.array
-        #ic(data_copy)
-        for i in range(4):  # for each leg
-            for j in range(len(data_copy[i])):  # lets look at that legs rising edge data
-                if data_copy[i][j] == 1:  #  if a rising edge was detected and we havnt looked at this t yet
-                    for k in range(1, min(len(data_copy[i]) - j, max_frequency + 1)):  # lets look min_spacing out to the right (or to the end of the list if not enough space)
-                        if data_copy[i][j + k] == 1:  # if there is a rising edge here
-                            data_copy[i][j] = -1  # replace the origin with a -1 to indicate it needs to be changed
-                            break
-        #ic(data_copy)
-        data_copy[data_copy == -1] = 0  # replace any t with -1 to 0
-        #ic(data_copy)
-        return [list(sub_list) for sub_list in data_copy]
-        
-            
+        ])   
 
     def get_ang_vel_proj_score(self) -> float:
         """

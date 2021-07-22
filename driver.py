@@ -5,7 +5,7 @@
 import os
 import pickle
 import numpy as np
-from icecream import ic  # better printing for debugging
+from icecream import ic
 import matplotlib.pyplot as plt
 import argparse
 
@@ -46,7 +46,7 @@ class Driver:
         return args
 
     def make_env(self, gui = False, fast_mode=True, verbose=False):
-        # change GUI to false here to use direct mode when training!!!
+        # change GUI to False here to use direct mode when training!!!
         return SpiderBotSimulator(self.paths['spider-urdf'], gui = gui, fast_mode = fast_mode)
 
     def get_model_name(self):
@@ -92,7 +92,7 @@ class Driver:
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, env_var, terminate: bool = False, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
+    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
         i = 0
         if callable(env_var):
             env = env_var()
@@ -126,19 +126,17 @@ class Driver:
                 
         except KeyboardInterrupt:
             env.close()
-        filtered_rising_edges = env.get_filtered_rising_edges()
-        ic(env.steps)
-        fitness = sum(env.steps)#self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
+
+        #ic(env.steps)
+        fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i)
 
         if verbose:
-            num_edges = [sum(leg) for leg in filtered_rising_edges]
             ic('Done!')
             ic(fitness)
             ic(f'Survived for {i} steps')
             ic(env.spider.get_pos(), env.initial_position)
             ic(np.sum(env.rising_edges, axis=1))
-            ic(np.sum(filtered_rising_edges, axis=1))
-            ic(np.mean(num_edges))
+
             
         if eval:
             self.graph_eval_data(
@@ -162,18 +160,18 @@ class Driver:
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
     @staticmethod
-    def calc_fitness(current_pos: np.array, initial_pos: np.array, filtered_rising_edges: np.array) -> float:
+    def calc_fitness(initial_pos: np.array, current_pos: np.array, num_steps: np.array, T: int) -> float:
         """
+        Uncomment measurements you wanna use!
         """
-        T = len(filtered_rising_edges[0])
-        num_edges = [sum(leg) for leg in filtered_rising_edges]
-        target_time_per_step = 100
-        target_num_steps = T / target_time_per_step
-        avg_edges_per_leg = np.mean(num_edges)
-        modifier = 1
-        if avg_edges_per_leg < target_num_steps:
-            modifier = avg_edges_per_leg / target_num_steps
-        return np.linalg.norm((current_pos - initial_pos)[:2]) ** 2 + np.sqrt(min(500, T))
+        #dist_traveled = np.linalg.norm((current_pos - initial_pos)[:2])
+        total_steps = np.sum(num_steps)
+        #avg_outward_vel = dist_traveled / T
+        #avg_steps_per_leg = np.mean(num_steps)
+        #steps_std = np.std(num_steps)
+        #steps_cv = steps_std / avg_steps_per_leg
+        #avg_steps_per_time = total_steps / T
+        return total_steps
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

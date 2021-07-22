@@ -33,6 +33,8 @@ def make_training_fig():
     
     axes[1].set_xlabel('Generation')
 
+    plt.tight_layout()
+
     return fig, axes
 
 def GraphBodyTrajectory(body_pos: np.array) -> plt.Axes:

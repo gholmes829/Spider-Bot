@@ -11,32 +11,38 @@ import neat
 from functools import reduce
 import psutil
 from time import sleep
+import pickle
 
 from spider_bot.agent import Agent
+from spider_bot.utils import timed
 
 class Evolution:
-    def __init__(self, make_env, fitness_function, gens = 100) -> None:
+    def __init__(self, make_env, fitness_function, checkpoint_dir, graph, gens = 100) -> None:
         self.make_env = make_env
         self.fitness_function = fitness_function
         self.generations = gens
-        #self.pool = Pool(maxtasksperchild=1)
-        self.progress = 0
-        self.parallelize = False  # initialize to false, can change in <Evolution.run>
-        self.average_fitnesses = []
+        self.current_generation = 0
+        self.num_workers = 1  # default initialization, change in <Evolution.run>
+        self.graph = graph
 
-    def run(self, config_file, parallelize = True):
+        self.progress = 0
+        self.average_fitnesses = []
+        self.average_fitnesses = []
+        self.checkpoint_dir = checkpoint_dir
+
+    @timed
+    def run(self, config_file, num_workers = -1):
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                             neat.DefaultSpeciesSet, neat.DefaultStagnation,
                             config_file)
 
         print("Creating Population...")
         p = neat.Population(config)
-
         p.add_reporter(neat.StdOutReporter(False))
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
 
-        self.parallelize = parallelize
+        self.num_workers = num_workers if num_workers > 0 else psutil.cpu_count(logical=False)
 
         winner = p.run(self.eval_genomes, self.generations)
         print('\nBest genome:\n{!s}'.format(winner.fitness))
@@ -44,91 +50,73 @@ class Evolution:
         winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
         return ic(winner_net, self.average_fitnesses)
 
-    def eval_genomes(self, genomes, config):
-        # ToDo: get parallelization to work
+    def eval_genomes(self, genomes, config):        
+        for genome_id, genome in genomes: genome.fitness = 0
+        agents = [Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id) for genome_id, genome in genomes]
+        agent_batches = np.array_split(agents, self.num_workers)
         
-        if self.parallelize:
-            print('Making agents...', flush=True)
-            num_cores = psutil.cpu_count(logical=False)
-            #assert num_cores == len(self.envs)
-            
-            agents = []
-            for genome_id, genome in genomes:
-                genome.fitness = 0
-                agents.append(Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id))
-            print(f'Num agents: {len(agents)}', flush=True)
-            batches = np.array_split(agents, num_cores)
-            batch_sizes = [len(batch) for batch in batches]
-            print(f'{num_cores} batches: {batch_sizes}', flush=True)
-            
-            # get workers
-            progress_queue = mp.Queue()
-            queues = [mp.Queue() for _ in range(num_cores)]
-            workers = [mp.Process(target=self.eval_genome_batch, args=(batch, self.make_env, self.fitness_function, queue, progress_queue)) for i, (queue, batch) in enumerate(zip(queues, batches))]
-            print('Starting workers...', flush=True)
-            for worker in workers: worker.start()
-            sleep(0.1)
-            print(f'Located {len(psutil.Process().children())} out of {num_cores} processes...\n', flush=True)
-            #sleep(0.1)
-            #while len(psutil.Process().children()) < num_cores:
-            #    ic(len(psutil.Process().children()))
-            #    sleep(0.1)
-            #sleep(1)
-            for i in tqdm(range(len(agents)), ascii=True):
-                progress_queue.get()
-                
-            results = [[queue.get() for _ in range(batch_size)] for queue, batch_size in zip(queues, batch_sizes)]
-            for queue in queues: queue.close()
-            progress_queue.close()
-                
-            print('Joining workers...', flush=True)
-            for worker in workers: worker.join(5)  # timeout shouldn't be needed in theory, but just in case physics clients get stuck
-            print(f'Worker exit codes: {[worker.exitcode for worker in workers]}', flush=True)
-            for worker in workers: worker.close()
-            print('Getting results...', flush=True)
+        progress_queue = mp.Queue()
+        result_queues = [mp.Queue() for _ in range(self.num_workers)]
+        workers = [mp.Process(target=self.eval_genome_batch, args=(agent_batch, self.make_env, self.fitness_function, result_queue, progress_queue)) for result_queue, agent_batch in zip(result_queues, agent_batches)]
+        for worker in workers: worker.start()
+        
+        sleep(0.1)
+        children_found = len(psutil.Process().children())
+        if children_found != self.num_workers: print(f'WARNING: found {children_found}, expected {self.num_workers} child processes...\n', flush=True)
 
-            #print(f'{len(results)} batches of results: {[len(result) for result in results]}', flush=True)
-            results_flat = reduce(lambda base, next: base + next, results)
-            #ic(f'Total num of results: {len(results_flat)}')
-            total_fitess = 0
-            for i, (genome_id, genome) in enumerate(genomes):
-                fitness, agent_id = results_flat[i]
-                assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
-                genome.fitness = fitness
-                total_fitess += fitness 
-            self.average_fitnesses.append(total_fitess / len(genomes))
-            print(f'NEAT is evolving or something...', flush=True)
+        for _ in tqdm(range(len(agents)), ascii=True): progress_queue.get()  # loading bar
             
-        else:
-            env = self.make_env()
-            total_fitess = 0
-            for genome_id, genome in tqdm(genomes, ascii=True):  # TODO: call eval_genome_batch with one batch -- entire thing
-                genome.fitness = 0
-                agent = Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id)
-                fitness, agent_id = self.fitness_function(agent, env, self.fitness_function)
-                total_fitess += fitness
-                genome.fitness = fitness
-            self.average_fitnesses.append(total_fitess / len(genomes))
+        results = [[queue.get() for _ in range(len(batch))] for queue, batch in zip(result_queues, agent_batches)]
+        for queue in result_queues: queue.close()
+        progress_queue.close()
+            
+        for worker in workers: worker.join(5)  # timeout shouldn't be needed in theory, but just in case physics clients get stuck
+        exit_codes = [worker.exitcode for worker in workers]
+        if any(exit_codes): print(f'WARNING: recieved non-zero exit code, {exit_codes}', flush=True)
+            
+        for worker in workers: worker.close()
+
+        results_flat = reduce(lambda base, next: base + next, results)
+
+        total_fitess = 0
+        best_genome = None
+        
+        for i, (genome_id, genome) in enumerate(genomes):
+            fitness, agent_id = results_flat[i]
+            assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
+            genome.fitness = fitness
+            total_fitess += fitness
+            if best_genome is None or genome.fitness > best_genome.fitness: best_genome = genome
+            
+        self.checkpoint(best_genome, config)
+        avg_fitness = total_fitess / len(genomes)
+        self.average_fitnesses.append(avg_fitness)
+        self.graph.send_data((avg_fitness, best_genome.fitness))
+        
+        test_env = self.make_env(gui=True, fast_mode=False)
+
+        best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
+        self.fitness_function(best_agent, test_env, verbose=True)
+        
+        test_env.close()
+            
+        self.current_generation += 1
     
     @staticmethod
-    def eval_genome_batch(batch, make_env, fitness_func, queue, progress_queue):
+    def eval_genome_batch(batch, make_env, fitness_func, result_queue, progress_queue):
         print(f'New process with PID: {os.getpid()}, processing {len(batch)} agents', flush=True)
         env = make_env()
         for agent in batch:
-            queue.put(fitness_func(agent, env))
+            result_queue.put(fitness_func(agent, env))
             progress_queue.put(1)
-        #print(f'Process with PID {os.getpid()} is done processing...')
         env.close()
-        #queue.close()
-        #progress_queue.close()
+
         while env.physics_client.isConnected():  # sleep until client disconnects
-            #print(f'Process with PID {os.getpid()} waiting to disconnect...')
             sleep(0.1)
-        #print(f'Process with PID {os.getpid()} is returning...')
-    
-    #def close(self):
-    #    self.pool.close()
-        
-def eval_batch(agents, make_env, fitness_func):
-    return [fitness_func(agent, make_env) for agent in agents]
-    
+
+    def checkpoint(self, best_genome, config):
+        genome_net = neat.nn.FeedForwardNetwork.create(best_genome, config)
+        filename = os.path.join(self.checkpoint_dir, "gen" + str(self.current_generation) + "-" + str(round(best_genome.fitness, 2))) + '.pickle'
+        with open(filename, 'wb') as f:
+            pickle.dump(genome_net, f, pickle.HIGHEST_PROTOCOL)
+            print("Saved model with fitness ", best_genome.fitness)

@@ -35,10 +35,16 @@ class SpiderBotSimulator(Env):
         self.spider = SpiderBot(spider_bot_model_path, self.physics_client)
         
         self.max_spider_vel = 5
-        spider_pos = self.spider.get_pos()
         
-        self.camera = Camera(self.physics_client, initial_pos = spider_pos)
+        self.initial_position = self.spider.get_pos()
+        self.last_position = None
+        self.curr_position = self.initial_position
+        self.velocity = np.zeros(3)
+        
+        self.camera = Camera(self.physics_client, initial_pos = self.initial_position)
         self.camera_tracking = False
+        self.prev_cd = [True, True, True, True]
+        self.rising_edges = [[0] for _ in range(4)]
         
         self.action_space = spaces.Box(
             low = np.full(12, -1),
@@ -59,11 +65,6 @@ class SpiderBotSimulator(Env):
                     *np.full(3, self.max_spider_vel)
                 ]),
         )
-
-        self.initial_position = self.spider.get_pos()
-        self.last_position = None
-        self.curr_position = self.initial_position
-        self.velocity = np.zeros(3)
         
         self.i = 0
         self.t = 0
@@ -91,9 +92,15 @@ class SpiderBotSimulator(Env):
         self.i += 1
 
         observation = self.get_observation()
-        reward = self.get_prop_vel_proj_score_gait_monitor()
+        reward = 0#self.get_prop_vel_proj_score()
         done = self.is_terminated()
         info = self.get_info()
+
+        cd = info['contact-data']
+        assert len(cd) == 4
+        for i in range(len(cd)):
+            self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
+        self.prev_cd = cd
         
         self.spider.clamp_joints(verbose=False)
         #self.spider.debug_joints(verbose=False)
@@ -109,6 +116,30 @@ class SpiderBotSimulator(Env):
             *orientation,
             *self.velocity
         ])
+
+    def get_filtered_rising_edges(self, min_spacing = 10):
+        return SpiderBotSimulator.low_pass_filter(self.rising_edges, min_spacing)
+    
+    @staticmethod
+    def low_pass_filter(data: list, max_frequency: int) -> list:
+        """
+        A 'low pass filter' that removes non-zero values from a non-ragged 2D list that occur with too high a frequency.
+        """
+        data_copy = np.array(data)  # copy the original into a np.array
+        #ic(data_copy)
+        for i in range(4):  # for each leg
+            for j in range(len(data_copy[i])):  # lets look at that legs rising edge data
+                if data_copy[i][j] == 1:  #  if a rising edge was detected and we havnt looked at this t yet
+                    for k in range(1, min(len(data_copy[i]) - j, max_frequency + 1)):  # lets look min_spacing out to the right (or to the end of the list if not enough space)
+                        if data_copy[i][j + k] == 1:  # if there is a rising edge here
+                            data_copy[i][j] = -1  # replace the origin with a -1 to indicate it needs to be changed
+                            break
+        #ic(data_copy)
+        data_copy[data_copy == -1] = 0  # replace any t with -1 to 0
+        #ic(data_copy)
+        return [list(sub_list) for sub_list in data_copy]
+        
+            
 
     def get_ang_vel_proj_score(self) -> float:
         """
@@ -164,7 +195,8 @@ class SpiderBotSimulator(Env):
             "joint-pos":          joint_info['pos'],
             "joint-vel":          joint_info['vel'],
             "joint-torques":      joint_info['motor_torques'],
-            "contact-data":       binary_contact_data
+            "contact-data":       binary_contact_data,
+            "ankle-pos":          joint_info['ankle-pos']
         }
 
     def get_contact_data(self) -> list:
@@ -188,7 +220,13 @@ class SpiderBotSimulator(Env):
         
         self.i = 0
         self.t = 0
-        # also tried using <pb.resetSimulation()> and <pb.resetBasePositionAndOrientation(self.spider.id, (0, 0, 1), (0, 0, 0, 0))>
+        self.rising_edges = [[0] for _ in range(4)]
+        self.velocity = 0
+        self.initial_position = self.spider.get_pos()
+        self.last_position = None
+        self.curr_position = self.initial_position
+        self.velocity = np.zeros(3)
+
         return self.get_observation()
         
     def update_camera(self, verbose: bool = False) -> None:

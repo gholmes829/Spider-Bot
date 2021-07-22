@@ -4,15 +4,16 @@
 
 import os
 import pickle
-import time
 import numpy as np
 from icecream import ic  # better printing for debugging
 import matplotlib.pyplot as plt
 import argparse
 
+from spider_bot.utils import LivePlotter
 from spider_bot.environments import SpiderBotSimulator
 from spider_bot.agent import Agent
 from spider_bot.training import Evolution
+import graphing
 from graphing import *
 
 class Driver:
@@ -22,27 +23,33 @@ class Driver:
             'train': self.train
         }
         
-        parser = argparse.ArgumentParser()
-        parser.add_argument('mode', choices = self.modes.keys(), help = 'determines which mode to run')
-        args = parser.parse_args()
+        args = self.parse_args()
         self.mode = args.mode
         
         self.cwd = os.getcwd()
         self.paths = {
             'models' :     os.path.join(self.cwd, 'models'),
             'figures':     os.path.join(self.cwd, 'figures'),
-            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf')
+            'spider-urdf': os.path.join(self.cwd, 'urdfs', 'spider_bot_v2.urdf'),
+            'checkpoints': os.path.join(self.cwd, 'checkpoints')
         }
         self.model_name = None
+        self.fitnesses = []
 
     def run(self) -> None:
         self.modes[self.mode]()
 
-    def make_env(self):
-        # change GUI to false here to use direct mode when training!!!
-        return SpiderBotSimulator(self.paths['spider-urdf'], gui = False, fast_mode = True)
+    def parse_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('mode', choices = self.modes.keys(), help = 'determines which mode to run')
+        args = parser.parse_args()
+        return args
 
-    def train(self) -> None:
+    def make_env(self, gui = False, fast_mode=True, verbose=False):
+        # change GUI to false here to use direct mode when training!!!
+        return SpiderBotSimulator(self.paths['spider-urdf'], gui = gui, fast_mode = fast_mode)
+
+    def get_model_name(self):
         valid_model_name = False 
         while not valid_model_name:
             model_name = input("Name for this model: ") + '.pickle'
@@ -52,20 +59,29 @@ class Driver:
                 valid_model_name = True
                 self.paths['session'] = os.path.join(self.cwd, model_name)
                 self.model_name = model_name
+
+    def train(self) -> None:
+        self.get_model_name()
         gens = int(input("Number of generations: "))
-        ev = Evolution(self.make_env, self.episode, gens=gens)
+        
+        checkpoint_dir = os.path.join(self.paths['checkpoints'], self.model_name[:-7])
+        os.mkdir(checkpoint_dir) # create a directory to save checkpoints
+        
+        graph = LivePlotter(graphing.live_training_cb, graphing.make_training_fig)
+        graph.start()
+        ev = Evolution(self.make_env, self.episode, checkpoint_dir, graph, gens=gens)
 
-        currentdir = os.getcwd()
-        config_path = os.path.join(currentdir, 'neat/neat_config')
+        config_path = os.path.join(self.cwd, 'neat/neat_config')
 
-        before_time = time.time()
-        winner_net, fitnesses = ev.run(config_path, parallelize=True)
-        time_to_train = time.time() - before_time
+        (winner_net, fitnesses), time_to_train = ev.run(config_path)
+
         print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
         self.graph_training_data(np.array(fitnesses))
         self.save_model(winner_net)
-        #ev.close()  # not needed anymore
+        
+        print('Close graph to end training...')
+        graph.close()
 
     def test_bot(self):
         model = self.load_model()
@@ -76,7 +92,7 @@ class Driver:
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 5096, eval=False) -> None:
+    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
         i = 0
         if callable(env_var):
             env = env_var()
@@ -87,9 +103,9 @@ class Driver:
         rewards = []
         observation = env.reset()
         controls = agent.predict(self.preprocess(observation, env))
-        joint_pos, joint_vel, joint_torques, body_pos, contact_data = [], [], [], [], []
+        joint_pos, joint_vel, joint_torques, body_pos, contact_data, ankle_pos = [], [], [], [], [], []
         body_velocity = []
-        #print('Start:', os.getpid(), agent.id, flush=True)
+
         try:
             while not terminate or (not done and (not max_steps or i < max_steps)):
                 observation, reward, done, info = env.step(controls)
@@ -100,30 +116,38 @@ class Driver:
                     joint_vel.append(info['joint-vel'])
                     body_pos.append(info['body-pos'])
                     joint_torques.append(info['joint-torques'])
-                    contact_data.append(info['contact-data'])
+                    contact_data.append([int(e) for e in info['contact-data']])
+                    ankle_pos.append(info['ankle-pos'])#[:][:][2])
                     vel = env.velocity
                     body_velocity.append(vel)
-                    #ic(vel)
                 
                 controls = agent.predict(self.preprocess(observation, env))
                 i += 1
                 
         except KeyboardInterrupt:
             env.close()
-        fitness = self.calc_fitness(rewards, i)
+        filtered_rising_edges = env.get_filtered_rising_edges()
+
+        fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
+
         if verbose:
             ic('Done!')
             ic(fitness)
+            ic(f'Survived for {i} steps')
+            ic(np.sum(env.rising_edges, axis=1))
+            ic(np.sum(filtered_rising_edges, axis=1))
+ 
         if eval:
             self.graph_eval_data(
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
                 np.array(body_pos).T,
                 np.array(joint_torques).T,
-                np.array(contact_data, dtype=int).T
+                np.array(contact_data, dtype=int).T,
+                np.array(ankle_pos).T
             )
             ic(np.sum(body_velocity, axis=0))
-        #print('End:', os.getpid(), agent.id, done, flush=True)
+
         return fitness, agent.id
     
     def preprocess(self, observation: np.ndarray, env) -> np.ndarray:
@@ -135,9 +159,19 @@ class Driver:
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
     @staticmethod
-    def calc_fitness(rewards: list, steps: int) -> float:
-        return sum(rewards)
-
+    def calc_fitness(current_pos: np.array, initial_pos: np.array, filtered_rising_edges: np.array) -> float:
+        """
+        """
+        T = len(filtered_rising_edges[0])
+        num_edges = [sum(leg) for leg in filtered_rising_edges]
+        target_time_per_step = 150
+        target_num_steps = T / target_time_per_step
+        avg_edges_per_leg = np.mean(num_edges)
+        modifier = 1
+        if avg_edges_per_leg < target_num_steps:
+            modifier = avg_edges_per_leg / target_num_steps
+        return 10 * np.linalg.norm((current_pos - initial_pos)[:2]) * modifier + np.sqrt(min(100, T))
+        
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:
             pickle.dump(model, f, pickle.HIGHEST_PROTOCOL)
@@ -181,6 +215,7 @@ class Driver:
                     body_positions:   np.array,
                     joint_torques:    np.array,
                     contact_data:     list,
+                    ankle_pos:        np.array,
                     display_graphs:   bool = False
                     ) -> None:
         plt.style.use(["dark_background"])
@@ -200,6 +235,10 @@ class Driver:
 
         ax = GraphContactData(contact_data)
         plt.savefig(os.path.join(self.paths['figures'], 'contact_data'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
+        ax = GraphAnkleHeights(ankle_pos[2])
+        plt.savefig(os.path.join(self.paths['figures'], 'ankle_heights'))
         if display_graphs: plt.show()
 
         ax = GraphBodyTrajectory(body_positions)

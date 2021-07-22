@@ -1,5 +1,39 @@
+"""
+
+"""
+
+import multiprocessing as mp
 import matplotlib.pyplot as plt
 import numpy as np
+
+from spider_bot import utils
+
+@utils.simplify_anim_cb_signature
+def live_training_cb(axes, data: list, queue: mp.Queue):
+    if not queue.empty():
+        new_data = queue.get()
+        data.append(new_data)
+        n = len(data)
+        d1, d2 = zip(*data)
+        axes[0].plot(range(n), d1, 'r')
+        axes[1].plot(range(n), d2, 'g')
+        axes[0].set_xlim([0, n + 2])
+        axes[1].set_xlim([0, n + 2])
+    
+def make_training_fig():
+    fig, axes = plt.subplots(2, sharex=True)
+    
+    axes[0].set_title('Avg Fitness')
+    axes[0].set_ylabel('Fitness')
+    axes[0].grid(alpha=0.5)
+    
+    axes[1].set_title('Best Fitness')
+    axes[1].set_ylabel('Fitness')
+    axes[1].grid(alpha=0.5)
+    
+    axes[1].set_xlabel('Generation')
+
+    return fig, axes
 
 def GraphBodyTrajectory(body_pos: np.array) -> plt.Axes:
     """
@@ -37,7 +71,22 @@ def GraphContactData(data: np.array) -> plt.Axes:
     for i in range(2):
         for j in range(2):
             index = 2 * i + j
-            axs[i, j].plot(x, data[index], colors[index])
+            for k, (t, point) in enumerate(zip(x[:-1], data[index][:-1])):
+                next_point = data[index][k + 1]
+
+                if point + next_point == 0:
+                    axs[i, j].plot([t, t + 1], [0, 0], colors[index])
+                elif point + next_point == 2:
+                    axs[i, j].plot([t, t + 1], [1, 1], colors[index])
+                elif point == 1 and next_point == 0:  # rising edge
+                    axs[i, j].plot([t, t + 1], [1, 1], colors[index])
+                    axs[i, j].plot([t + 1, t + 1], [1, 0], colors[index])
+                elif point == 0 and next_point == 1:  # falling edge
+                    axs[i, j].plot([t, t + 1], [0, 0], colors[index])
+                    axs[i, j].plot([t + 1, t + 1], [0, 1], colors[index])
+                else:
+                    raise ValueError(f'Invalid point, next point: {point, next_point}')
+                #axs[i, j].plot(x, data[index], colors[index])
             axs[i, j].set_title(subtitles[index])
             axs[i, j].set_yticks([0, 1])
     
@@ -95,3 +144,29 @@ def GraphFitness(fitnesses: np.array) -> plt.Axes:
     ax.set_xlabel("Generation")
     ax.set_ylabel("Average Fitness")
     return ax
+
+def GraphAnkleHeights(data: np.array) -> plt.Axes:
+    """ 
+    Creates four 2D graphs of the heights of each ankle
+
+    """
+    colors = ['tab:orange', 'tab:green', 'tab:olive', 'tab:blue']
+    subtitles: list = ["Front Left", "Front Right", "Back Left", "Back Right"]
+
+    front_left, front_right, back_left, back_right = data[0:4]
+    x = np.linspace(0, front_left.size, num=front_left.size)
+
+    ymax = data.max() * 1.05
+    ymin = data.min()
+
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle("Ankle Heights Over Time")
+
+    for i in range(2):
+        for j in range(2):
+            index = 2 * i + j
+            axs[i, j].plot(x, data[index], colors[index])
+            axs[i, j].set_title(subtitles[index])
+            axs[i, j].set_ylim(ymin, ymax)
+    
+    return axs

@@ -128,7 +128,7 @@ class Driver:
             env.close()
 
         #ic(env.steps)
-        fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i)
+        fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i, verbose=verbose)
 
         if verbose:
             ic('Done!')
@@ -136,6 +136,7 @@ class Driver:
             ic(f'Survived for {i} steps')
             ic(env.spider.get_pos(), env.initial_position)
             ic(np.sum(env.rising_edges, axis=1))
+            ic(env.steps)
 
             
         if eval:
@@ -160,19 +161,27 @@ class Driver:
         return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
 
     @staticmethod
-    def calc_fitness(initial_pos: np.array, current_pos: np.array, num_steps: np.array, T: int) -> float:
+    def calc_fitness(initial_pos: np.array, current_pos: np.array, steps: np.array, T: int, verbose=False) -> float:
         """
         Uncomment measurements you wanna use!
         """
         #dist_traveled = np.linalg.norm((current_pos - initial_pos)[:2])
-        total_steps = np.sum(num_steps)
+        total_steps = np.sum(steps)
         #avg_outward_vel = dist_traveled / T
         #avg_steps_per_leg = np.mean(num_steps)
         #steps_std = np.std(num_steps)
         #steps_cv = steps_std / avg_steps_per_leg
         #avg_steps_per_time = total_steps / T
 
-        fitness = total_steps
+        default_min = 50
+        clipped_T = min(default_min + total_steps * 10, T)
+        fitness = 1e-3 * clipped_T ** 2
+        
+        if verbose:
+            ic(steps)
+            ic(total_steps)
+            ic(clipped_T)
+            ic(fitness)
         return float(fitness)
         
     def save_model(self, model) -> None:

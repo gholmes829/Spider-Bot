@@ -108,6 +108,7 @@ class SpiderBotSimulator(Env):
             if self.is_stepping[i] and cd[i] and not self.prev_cd[i]: # spider is stepping and just touched ground again
                 self.is_stepping[i] = False 
                 self.steps[i] += 1
+                
                 #self.has_stepped[i] = 
             #not (cd[i] and not self.prev_cd[i]) # reset step once foot touches ground
         self.prev_cd = cd

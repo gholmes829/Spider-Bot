@@ -7,7 +7,7 @@ import pybullet as pb
 import numpy as np
 
 class SpiderBot:
-    def __init__(self, model_path: str, physics_client, initial_pos: tuple = (0, 0, 0.17)) -> None:
+    def __init__(self, model_path: str, physics_client, initial_pos: tuple = (0, 0, 0.1675)) -> None:
         self.model_path = model_path
         self.physics_client = physics_client
         self.id = self.physics_client.loadURDF(self.model_path, initial_pos, flags=pb.URDF_USE_SELF_COLLISION)

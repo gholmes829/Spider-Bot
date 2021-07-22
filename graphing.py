@@ -144,3 +144,29 @@ def GraphFitness(fitnesses: np.array) -> plt.Axes:
     ax.set_xlabel("Generation")
     ax.set_ylabel("Average Fitness")
     return ax
+
+def GraphAnkleHeights(data: np.array) -> plt.Axes:
+    """ 
+    Creates four 2D graphs of the heights of each ankle
+
+    """
+    colors = ['tab:orange', 'tab:green', 'tab:olive', 'tab:blue']
+    subtitles: list = ["Front Left", "Front Right", "Back Left", "Back Right"]
+
+    front_left, front_right, back_left, back_right = data[0:4]
+    x = np.linspace(0, front_left.size, num=front_left.size)
+
+    ymax = data.max() * 1.05
+    ymin = data.min()
+
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle("Ankle Heights Over Time")
+
+    for i in range(2):
+        for j in range(2):
+            index = 2 * i + j
+            axs[i, j].plot(x, data[index], colors[index])
+            axs[i, j].set_title(subtitles[index])
+            axs[i, j].set_ylim(ymin, ymax)
+    
+    return axs

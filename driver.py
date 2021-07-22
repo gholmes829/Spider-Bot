@@ -103,7 +103,7 @@ class Driver:
         rewards = []
         observation = env.reset()
         controls = agent.predict(self.preprocess(observation, env))
-        joint_pos, joint_vel, joint_torques, body_pos, contact_data = [], [], [], [], []
+        joint_pos, joint_vel, joint_torques, body_pos, contact_data, ankle_pos = [], [], [], [], [], []
         body_velocity = []
 
         try:
@@ -117,6 +117,7 @@ class Driver:
                     body_pos.append(info['body-pos'])
                     joint_torques.append(info['joint-torques'])
                     contact_data.append([int(e) for e in info['contact-data']])
+                    ankle_pos.append(info['ankle-pos'])#[:][:][2])
                     vel = env.velocity
                     body_velocity.append(vel)
                 
@@ -128,21 +129,22 @@ class Driver:
         filtered_rising_edges = env.get_filtered_rising_edges()
 
         fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
-        
+
         if verbose:
             ic('Done!')
             ic(fitness)
             ic(f'Survived for {i} steps')
             ic(np.sum(env.rising_edges, axis=1))
             ic(np.sum(filtered_rising_edges, axis=1))
-            
+ 
         if eval:
             self.graph_eval_data(
                 np.array(joint_pos).T,
                 np.array(joint_vel).T,
                 np.array(body_pos).T,
                 np.array(joint_torques).T,
-                np.array(contact_data, dtype=int).T
+                np.array(contact_data, dtype=int).T,
+                np.array(ankle_pos).T
             )
             ic(np.sum(body_velocity, axis=0))
 
@@ -213,6 +215,7 @@ class Driver:
                     body_positions:   np.array,
                     joint_torques:    np.array,
                     contact_data:     list,
+                    ankle_pos:        np.array,
                     display_graphs:   bool = False
                     ) -> None:
         plt.style.use(["dark_background"])
@@ -232,6 +235,10 @@ class Driver:
 
         ax = GraphContactData(contact_data)
         plt.savefig(os.path.join(self.paths['figures'], 'contact_data'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
+        ax = GraphAnkleHeights(ankle_pos[2])
+        plt.savefig(os.path.join(self.paths['figures'], 'ankle_heights'))
         if display_graphs: plt.show()
 
         ax = GraphBodyTrajectory(body_positions)

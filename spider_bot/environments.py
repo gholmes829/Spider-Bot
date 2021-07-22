@@ -195,7 +195,8 @@ class SpiderBotSimulator(Env):
             "joint-pos":          joint_info['pos'],
             "joint-vel":          joint_info['vel'],
             "joint-torques":      joint_info['motor_torques'],
-            "contact-data":       binary_contact_data
+            "contact-data":       binary_contact_data,
+            "ankle-pos":          joint_info['ankle-pos']
         }
 
     def get_contact_data(self) -> list:

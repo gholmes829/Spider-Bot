@@ -175,13 +175,14 @@ class Driver:
 
         default_min = 50
         clipped_T = min(default_min + total_steps * 10, T)
-        fitness = 1e-3 * clipped_T ** 2
+        fitness = 1e-3 * clipped_T ** 2  # float(np.sum(steps) ** 2 + 0.1 * min(T, 100))
         
         if verbose:
             ic(steps)
             ic(total_steps)
             ic(clipped_T)
             ic(fitness)
+            
         return float(fitness)
         
     def save_model(self, model) -> None:

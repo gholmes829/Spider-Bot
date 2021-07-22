@@ -222,6 +222,10 @@ class SpiderBotSimulator(Env):
         self.last_position = None
         self.curr_position = self.initial_position
         self.velocity = np.zeros(3)
+        
+        self.prev_cd = [True, True, True, True]
+        self.is_stepping = [False, False, False, False]
+        self.steps = [-1 for _ in range(4)]
 
         return self.get_observation()
         

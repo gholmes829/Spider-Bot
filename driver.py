@@ -165,7 +165,7 @@ class Driver:
         """
         Uncomment measurements you wanna use!
         """
-        #dist_traveled = np.linalg.norm((current_pos - initial_pos)[:2])
+        dist_traveled = np.linalg.norm((current_pos - initial_pos)[:2])
         total_steps = np.sum(steps)
         #avg_outward_vel = dist_traveled / T
         #avg_steps_per_leg = np.mean(num_steps)
@@ -177,7 +177,7 @@ class Driver:
         #clipped_T = min(default_min + total_steps * 10, T)
         #fitness = 1e-3 * clipped_T ** 2  # float(np.sum(steps) ** 2 + 0.1 * min(T, 100))
 
-        fitness = 1e-3 * T * total_steps ** 2
+        fitness = 1e-3 * T * dist_traveled * total_steps ** 2
         if verbose:
             ic(steps)
             ic(total_steps)

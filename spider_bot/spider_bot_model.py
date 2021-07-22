@@ -115,12 +115,14 @@ class SpiderBot:
 
     def get_joints_state(self, joint_indices):
         state = self.physics_client.getJointStates(self.id, joint_indices)
+        ankles = self.physics_client.getLinkStates(self.id, self.ankles)
         #for i, joint in enumerate(state): assert joint[0] == np.clip(joint[0], -self.max_angle_range, self.max_angle_range), f'Joint {i} is outside expected position ({joint[0]})' 
         return {
             'pos': [joint[0] for joint in state],
             'vel': [joint[1] for joint in state],
             'reaction_forces': [joint[2] for joint in state],
-            'motor_torques': [joint[3] for joint in state]
+            'motor_torques': [joint[3] for joint in state],
+            'ankle-pos': [joint[0] for joint in ankles]
         }
         
     def reset_joints_state(self, joint_indices, target_pos):

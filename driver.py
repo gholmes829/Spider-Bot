@@ -130,11 +130,14 @@ class Driver:
         fitness = self.calc_fitness(env.spider.get_pos(), env.initial_position, filtered_rising_edges)
         
         if verbose:
+            num_edges = [sum(leg) for leg in filtered_rising_edges]
             ic('Done!')
             ic(fitness)
             ic(f'Survived for {i} steps')
+            ic(env.spider.get_pos(), env.initial_position)
             ic(np.sum(env.rising_edges, axis=1))
             ic(np.sum(filtered_rising_edges, axis=1))
+            ic(np.mean(num_edges))
             
         if eval:
             self.graph_eval_data(
@@ -162,13 +165,13 @@ class Driver:
         """
         T = len(filtered_rising_edges[0])
         num_edges = [sum(leg) for leg in filtered_rising_edges]
-        target_time_per_step = 150
+        target_time_per_step = 100
         target_num_steps = T / target_time_per_step
         avg_edges_per_leg = np.mean(num_edges)
         modifier = 1
         if avg_edges_per_leg < target_num_steps:
             modifier = avg_edges_per_leg / target_num_steps
-        return 10 * np.linalg.norm((current_pos - initial_pos)[:2]) * modifier + np.sqrt(min(100, T))
+        return np.linalg.norm((current_pos - initial_pos)[:2]) ** 2 + np.sqrt(min(500, T))
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

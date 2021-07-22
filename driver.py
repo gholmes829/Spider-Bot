@@ -147,7 +147,7 @@ class Driver:
                 np.array(contact_data, dtype=int).T,
                 np.array(ankle_pos).T
             )
-            ic(np.sum(body_velocity, axis=0))
+            #ic(np.sum(body_velocity, axis=0))
 
         return fitness, agent.id
     

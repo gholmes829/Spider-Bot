@@ -116,7 +116,7 @@ class SpiderBotSimulator(Env):
             if height > self.height_threshold and not self.is_stepping[i]: 
                 #self.steps[i] += 1
                 self.is_stepping[i] = True
-        print(self.steps)
+        #print(self.steps)
         # ankle_pos = info['ankle-pos']
         # for pos in ankle_pos:
         #     ic(pos)

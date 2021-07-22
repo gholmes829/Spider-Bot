@@ -44,7 +44,10 @@ class SpiderBotSimulator(Env):
         self.camera = Camera(self.physics_client, initial_pos = self.initial_position)
         self.camera_tracking = False
         self.prev_cd = [True, True, True, True]
+        self.has_stepped = [False, False, False, False]
+        self.height_threshold = 0.05
         self.rising_edges = [[0] for _ in range(4)]
+        self.steps = [0 for _ in range(4)]
         
         self.action_space = spaces.Box(
             low = np.full(12, -1),
@@ -97,11 +100,18 @@ class SpiderBotSimulator(Env):
         info = self.get_info()
 
         cd = info['contact-data']
+        ankle_heights = np.array(info['ankle-pos']).T[2]
+
         assert len(cd) == 4
         for i in range(len(cd)):
             self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
+            self.has_stepped[i] = not (cd[i] and not self.prev_cd[i])
         self.prev_cd = cd
-        
+
+        for i, height in enumerate(ankle_heights):
+            if height > self.height_threshold and not self.has_stepped[i]: self.steps[i] += 1
+        #ic(self.has_stepped, self.steps, cd, ankle_heights)
+
         self.spider.clamp_joints(verbose=False)
         #self.spider.debug_joints(verbose=False)
         
@@ -221,6 +231,7 @@ class SpiderBotSimulator(Env):
         self.i = 0
         self.t = 0
         self.rising_edges = [[0] for _ in range(4)]
+        self.steps = [0 for _ in range(4)]
         self.velocity = 0
         self.initial_position = self.spider.get_pos()
         self.last_position = None

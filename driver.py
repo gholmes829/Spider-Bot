@@ -92,7 +92,7 @@ class Driver:
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
-    def episode(self, agent: Agent, env_var, terminate: bool = True, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
+    def episode(self, agent: Agent, env_var, terminate: bool = False, verbose: bool = False, max_steps: float = 2048, eval=False) -> None:
         i = 0
         if callable(env_var):
             env = env_var()

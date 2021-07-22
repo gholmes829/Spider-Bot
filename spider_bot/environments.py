@@ -44,10 +44,10 @@ class SpiderBotSimulator(Env):
         self.camera = Camera(self.physics_client, initial_pos = self.initial_position)
         self.camera_tracking = False
         self.prev_cd = [True, True, True, True]
-        self.has_stepped = [False, False, False, False]
+        self.is_stepping = [False, False, False, False]
         self.height_threshold = 0.03
         self.rising_edges = [[0] for _ in range(4)]
-        self.steps = [0 for _ in range(4)]
+        self.steps = [-1 for _ in range(4)]
         
         self.action_space = spaces.Box(
             low = np.full(12, -1),
@@ -105,14 +105,18 @@ class SpiderBotSimulator(Env):
         assert len(cd) == 4
         for i in range(len(cd)):
             self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
-            if self.has_stepped[i]: self.has_stepped[i] = not (cd[i] and not self.prev_cd[i]) # reset step once foot touches ground
+            if self.is_stepping[i] and cd[i] and not self.prev_cd[i]: # spider is stepping and just touched ground again
+                self.is_stepping[i] = False 
+                self.steps[i] += 1
+                #self.has_stepped[i] = 
+            #not (cd[i] and not self.prev_cd[i]) # reset step once foot touches ground
         self.prev_cd = cd
 
         for i, height in enumerate(ankle_heights):
-            if height > self.height_threshold and not self.has_stepped[i]: 
-                self.steps[i] += 1
-                self.has_stepped[i] = True
-
+            if height > self.height_threshold and not self.is_stepping[i]: 
+                #self.steps[i] += 1
+                self.is_stepping[i] = True
+        print(self.steps)
         # ankle_pos = info['ankle-pos']
         # for pos in ankle_pos:
         #     ic(pos)

@@ -171,7 +171,9 @@ class Driver:
         #steps_std = np.std(num_steps)
         #steps_cv = steps_std / avg_steps_per_leg
         #avg_steps_per_time = total_steps / T
-        return total_steps
+
+        fitness = total_steps
+        return float(fitness)
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

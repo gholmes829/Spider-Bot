@@ -47,7 +47,7 @@ class SpiderBotSimulator(Env):
         self.is_stepping = [False, False, False, False]
         self.height_threshold = 0.03
         self.rising_edges = [[0] for _ in range(4)]
-        self.steps = [-1 for _ in range(4)]
+        self.steps = [0 for _ in range(4)]
         
         self.action_space = spaces.Box(
             low = np.full(12, -1),
@@ -225,7 +225,6 @@ class SpiderBotSimulator(Env):
         
         self.prev_cd = [True, True, True, True]
         self.is_stepping = [False, False, False, False]
-        self.steps = [-1 for _ in range(4)]
 
         return self.get_observation()
         

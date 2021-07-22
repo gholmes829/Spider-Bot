@@ -45,9 +45,9 @@ class Driver:
         args = parser.parse_args()
         return args
 
-    def make_env(self, gui = False, fast_mode=True, verbose=False):
+    def make_env(self, **kwargs):
         # change GUI to False here to use direct mode when training!!!
-        return SpiderBotSimulator(self.paths['spider-urdf'], gui = gui, fast_mode = fast_mode)
+        return SpiderBotSimulator(self.paths['spider-urdf'], **kwargs)
 
     def get_model_name(self):
         valid_model_name = False 
@@ -166,7 +166,7 @@ class Driver:
         Uncomment measurements you wanna use!
         """
         #dist_traveled = np.linalg.norm((current_pos - initial_pos)[:2])
-        
+        total_steps = np.sum(steps)
         #avg_outward_vel = dist_traveled / T
         #avg_steps_per_leg = np.mean(num_steps)
         #steps_std = np.std(num_steps)
@@ -176,8 +176,7 @@ class Driver:
         #default_min = 50
         #clipped_T = min(default_min + total_steps * 10, T)
         #fitness = 1e-3 * clipped_T ** 2  # float(np.sum(steps) ** 2 + 0.1 * min(T, 100))
-        steps = np.clip(steps, 0, np.inf)
-        total_steps = np.sum(steps)
+
         fitness = total_steps ** 2 + 0.05 * min(T, 200)
         if verbose:
             ic(steps)

@@ -93,7 +93,7 @@ class Evolution:
         self.average_fitnesses.append(avg_fitness)
         self.graph.send_data((avg_fitness, best_genome.fitness))
         
-        test_env = self.make_env(gui=True, fast_mode=False)
+        test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
 
         best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
         self.fitness_function(best_agent, test_env, verbose=True)
@@ -105,7 +105,7 @@ class Evolution:
     @staticmethod
     def eval_genome_batch(batch, make_env, fitness_func, result_queue, progress_queue):
         print(f'New process with PID: {os.getpid()}, processing {len(batch)} agents', flush=True)
-        env = make_env()
+        env = make_env(gui = False, fast_mode=True)
         for agent in batch:
             result_queue.put(fitness_func(agent, env))
             progress_queue.put(1)

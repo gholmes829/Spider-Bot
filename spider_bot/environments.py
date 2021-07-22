@@ -95,33 +95,14 @@ class SpiderBotSimulator(Env):
         self.i += 1
 
         observation = self.get_observation()
-        reward = 0#self.get_prop_vel_proj_score()
+        reward = 0
         done = self.is_terminated()
         info = self.get_info()
 
         cd = info['contact-data']
         ankle_heights = np.array(info['ankle-pos']).T[2]
-        #ic(np.round(ankle_heights, 2))
         assert len(cd) == 4
-        for i in range(len(cd)):
-            self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
-            if self.is_stepping[i] and cd[i] and not self.prev_cd[i]: # spider is stepping and just touched ground again
-                self.is_stepping[i] = False 
-                self.steps[i] += 1
-                
-                #self.has_stepped[i] = 
-            #not (cd[i] and not self.prev_cd[i]) # reset step once foot touches ground
-        self.prev_cd = cd
-
-        for i, height in enumerate(ankle_heights):
-            if height > self.height_threshold and not self.is_stepping[i]: 
-                #self.steps[i] += 1
-                self.is_stepping[i] = True
-        #print(self.steps)
-        # ankle_pos = info['ankle-pos']
-        # for pos in ankle_pos:
-        #     ic(pos)
-        #     pb.addUserDebugLine([pos[0], pos[1], 0], pos, lineColorRGB = [1, 0, 0], lifeTime=0.1)
+        self.update_steps(cd, ankle_heights)
         self.spider.clamp_joints(verbose=False)
         
         return observation, reward, done, info  # adhere to gym interface
@@ -201,6 +182,18 @@ class SpiderBotSimulator(Env):
     def spider_is_standing(self):
         # returns not (there exists some point of contact involving a spider link thats not an outer leg)
         return not any([p[3] not in self.spider.ankles + self.spider.outer_joints for p in self.physics_client.getContactPoints(self.spider.id, self.plane_id)])
+
+    def update_steps(self, cd: list, ankle_heights: np.array) -> None:
+        for i in range(len(cd)):
+            self.rising_edges[i].append(int(cd[i] == False and self.prev_cd[i]))
+            if self.is_stepping[i] and cd[i] and not self.prev_cd[i]: # spider is stepping and just touched ground again
+                self.is_stepping[i] = False 
+                self.steps[i] += 1
+        self.prev_cd = cd
+
+        for i, height in enumerate(ankle_heights):
+            if height > self.height_threshold and not self.is_stepping[i]: 
+                self.is_stepping[i] = True
         
     def close(self) -> None:
         self.physics_client.disconnect()

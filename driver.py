@@ -86,7 +86,7 @@ class Driver:
         model = self.load_model()
         if model is None:
             return
-        env = SpiderBotSimulator(self.paths['spider-urdf'])
+        env = SpiderBotSimulator(self.paths['spider-urdf'])#, gui=False, fast_mode=False)
         agent = Agent(model, 30, 12)
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
@@ -104,12 +104,15 @@ class Driver:
         controls = agent.predict(self.preprocess(observation, env))
         joint_pos, joint_vel, joint_torques, body_pos, contact_data, ankle_pos = [], [], [], [], [], []
         body_velocity = []
+        nn_output = [controls]
 
         try:
             while not terminate or (not done and (not max_steps or i < max_steps)):
                 observation, reward, done, info = env.step(controls)
                 rewards.append(reward)
-                
+                controls = agent.predict(self.preprocess(observation, env))
+                i += 1
+
                 if eval:
                     joint_pos.append(info['joint-pos'])
                     joint_vel.append(info['joint-vel'])
@@ -119,10 +122,8 @@ class Driver:
                     ankle_pos.append(info['ankle-pos'])#[:][:][2])
                     vel = env.velocity
                     body_velocity.append(vel)
-                
-                controls = agent.predict(self.preprocess(observation, env))
-                i += 1
-                
+                    nn_output.append(controls)
+
         except KeyboardInterrupt:
             env.close()
 
@@ -145,7 +146,8 @@ class Driver:
                 np.array(body_pos).T,
                 np.array(joint_torques).T,
                 np.array(contact_data, dtype=int).T,
-                np.array(ankle_pos).T
+                np.array(ankle_pos).T,
+                np.array(nn_output).T
             )
             #ic(np.sum(body_velocity, axis=0))
 
@@ -240,8 +242,18 @@ class Driver:
                     joint_torques:    np.array,
                     contact_data:     list,
                     ankle_pos:        np.array,
+                    nn_output:        np.array,
                     display_graphs:   bool = False
                     ) -> None:
+
+        """
+        Uses data from a single test episode to create and save the following graphs:
+
+        'ankle_heights': The z-position of each of the robot's ankles over time
+        'body_position': A 3D graph of the center of mass of the robot's body over time
+
+        """
+
         plt.style.use(["dark_background"])
         plt.rcParams.update({'font.size': 6})
 
@@ -255,6 +267,11 @@ class Driver:
 
         ax = GraphJointData(self.reorder_joints(joint_velocities), "Joint Velocities")
         plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
+        ic(nn_output)
+        ax = GraphJointData(self.reorder_joints(nn_output), "Neural Network Output")
+        plt.savefig(os.path.join(self.paths['figures'], 'nn_output'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
         ax = GraphContactData(contact_data)

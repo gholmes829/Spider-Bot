@@ -190,7 +190,7 @@ class Driver:
         dist_traveled = current_pos[1] - initial_pos[1] #np.linalg.norm((current_pos - initial_pos)[:2])
         total_steps = np.sum(steps)
         total_reward = sum(rewards)
-        fitness = total_reward + (100 * dist_traveled * total_steps ** 2)
+        fitness = total_reward + (10 * dist_traveled * total_steps ** 2)
         if verbose:
             ic(dist_traveled, steps, total_reward, fitness)
         return fitness

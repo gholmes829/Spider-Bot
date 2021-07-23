@@ -109,9 +109,9 @@ class SpiderBotSimulator(Env):
 
         #controls = self.filter_controls(controls.copy())
             
-        self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
-        self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
-        self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
+        # self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
+        # self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
+        # self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
         # update state vars
         self.last_position = self.curr_position
@@ -203,7 +203,7 @@ class SpiderBotSimulator(Env):
         self.V_ay = V_ay
         V_d = -np.abs(V_y - V_ay) if V_ay >= 0.3 else 0
         d_tau = -1 * np.sqrt(np.sum((tau - self.torques)**2))
-        reward = 10 * H + U + V_ay + V_d + d_tau
+        reward = H + U + V_ay + V_d + d_tau
         #ic(H, U, V_ay, V_d, d_tau, reward)
 
         return reward

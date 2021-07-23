@@ -99,19 +99,20 @@ class SpiderBotSimulator(Env):
         # use control outputs to move robot
         #for i, control in zip(self.spider.joints_flat, controls):
         #ic(self.spider.joint_limits)
-        for i, control in enumerate(controls):
-            control = np.clip(control, -1, 1)
-            target_position = self.spider.joint_limits[self.joint_pairs[i][0]]['center'] + 0.5 * control * self.spider.joint_limits[self.joint_pairs[i][0]]['range']
-            self.spider.set_joint_position(self.joint_pairs[i][0], target_position)
-            self.spider.set_joint_position(self.joint_pairs[i][1], target_position)
+        # for i, control in enumerate(controls):
+        #     control = np.clip(control, -1, 1)
+        #     target_position = self.spider.joint_limits[self.joint_pairs[i][0]]['center'] + 0.5 * control * self.spider.joint_limits[self.joint_pairs[i][0]]['range']
+        #     self.spider.set_joint_position(self.joint_pairs[i][0], target_position)
+        #     self.spider.set_joint_position(self.joint_pairs[i][1], target_position)
             #ic(self.joint_pairs[i][0], target_position)
             #ic(self.joint_pairs[i][1], target_position)
 
         #controls = self.filter_controls(controls.copy())
-            
-        self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
-        self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
-        self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
+        for i, pair in enumerate(self.joint_pairs):
+            self.spider.set_joint_velocities(pair, [controls[i], controls[i]])
+        # self.spider.set_joint_velocities(self.spider.outer_joints, controls[i])
+        # self.spider.set_joint_velocities(self.spider.middle_joints, controls[i])
+        # self.spider.set_joint_velocities(self.spider.inner_joints, controls[i])
         
         # update state vars
         self.last_position = self.curr_position

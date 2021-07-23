@@ -15,6 +15,7 @@ import pickle
 
 from spider_bot.agent import Agent
 from spider_bot.utils import timed
+from spider_bot import settings
 
 class Evolution:
     def __init__(self, make_env, fitness_function, checkpoint_dir, graph, gens = 100) -> None:
@@ -53,7 +54,7 @@ class Evolution:
     def eval_genomes(self, genomes, config):
         timer = time()        
         for genome_id, genome in genomes: genome.fitness = 0
-        agents = [Agent(neat.nn.FeedForwardNetwork.create(genome, config), 30, 12, id=genome_id) for genome_id, genome in genomes]
+        agents = [Agent(neat.nn.FeedForwardNetwork.create(genome, config), settings.input_shape, 12, id=genome_id) for genome_id, genome in genomes]
         agent_batches = np.array_split(agents, self.num_workers)
         
         progress_queue = mp.Queue()
@@ -98,7 +99,7 @@ class Evolution:
         
         test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
 
-        best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
+        best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), settings.input_shape, 12)
         self.fitness_function(best_agent, test_env, verbose=True)
         
         test_env.close()

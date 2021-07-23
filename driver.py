@@ -15,6 +15,7 @@ from spider_bot.agent import Agent
 from spider_bot.training import Evolution
 import graphing
 from graphing import *
+from spider_bot import settings
 
 class Driver:
     def __init__(self):
@@ -88,7 +89,7 @@ class Driver:
         if model is None:
             return
         env = SpiderBotSimulator(self.paths['spider-urdf'])
-        agent = Agent(model, 30, 12)
+        agent = Agent(model, settings.input_shape, 12)
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
@@ -177,7 +178,7 @@ class Driver:
         #clipped_T = min(default_min + total_steps * 10, T)
         #fitness = 1e-3 * clipped_T ** 2  # float(np.sum(steps) ** 2 + 0.1 * min(T, 100))
 
-        fitness = 1e-3 * T * dist_traveled * total_steps ** 2
+        fitness = ((1 + len([step for step in steps if step])) ** 2) * np.sqrt(dist_traveled) * (1 + total_steps)
         if verbose:
             ic(steps)
             ic(total_steps)

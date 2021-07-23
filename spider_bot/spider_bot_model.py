@@ -21,18 +21,33 @@ class SpiderBot:
         
         self.max_joint_angle = 1.571
         self.max_angle_range = 3.142
-        self.nominal_joint_velocity = 13.09
+        self.nominal_joint_velocity = 13.09 / (2 * np.pi)
         
         self.joints = [self.inner_joints, self.middle_joints, self.outer_joints]
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
+        self.all_joints = self.joints_flat + self.ankles
+        
+        self.joint_limits = {}
+        
+        for i in self.joints_flat:
+            joint_info = self.physics_client.getJointInfo(self.id, i)
+            limits = joint_info[8:10]
+            center = sum(limits) / 2
+            limit_range = limits[1] - limits[0]
+            self.joint_limits[i] = {
+                'limit': limits,
+                'center': center,
+                'range': limit_range
+            }
         
         # move joints to initial pos
+        
+        self.change_lateral_friction(self.ankles + self.inner_joints, np.full(4, 100))
+        self.set_max_joint_velocities(self.joints_flat + self.ankles, np.full(12, self.nominal_joint_velocity))
+        
         self.reset_joints_state(self.outer_joints, np.full(4, -0.4))
         self.reset_joints_state(self.middle_joints, np.full(4, -0.75))
         self.reset_joints_state(self.inner_joints, np.full(4, 1))
-        
-        self.change_lateral_friction(self.ankles, np.full(4, 2))
-        self.set_max_joint_velocities(self.joints_flat + self.ankles, np.full(12, self.nominal_joint_velocity))
         
         #self.debug_joints()
         
@@ -70,13 +85,29 @@ class SpiderBot:
     
     def set_joint_velocities(self, joint_indices, target_velocities):
         for i, target_velocity in zip(joint_indices, target_velocities):
-            self.physics_client.setJointMotorControl2(
-                self.id,
-                i,
-                controlMode = pb.VELOCITY_CONTROL,
-                targetVelocity = target_velocity,
-                maxVelocity = self.nominal_joint_velocity
-            )
+            self.set_joint_velocity(i, target_velocity)
+            
+    def set_joint_velocity(self, i, target_velocity):
+        self.physics_client.setJointMotorControl2(
+            self.id,
+            i,
+            controlMode = pb.VELOCITY_CONTROL,
+            targetVelocity = target_velocity,
+            maxVelocity = self.nominal_joint_velocity
+        )
+            
+    def set_joint_positions(self, joint_indices, target_positions):
+        for i, target_position in zip(joint_indices, target_positions):
+            self.set_joint_position(i, target_position)
+            
+    def set_joint_position(self, i, target_position):
+        self.physics_client.setJointMotorControl2(
+            self.id,
+            i,
+            controlMode = pb.POSITION_CONTROL,
+            targetPosition = target_position,
+            maxVelocity = self.nominal_joint_velocity
+        )
             
     def debug_joints(self, verbose=True, terminate=False):
         for i in range(self.physics_client.getNumJoints(self.id)):

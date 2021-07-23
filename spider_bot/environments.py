@@ -26,22 +26,32 @@ class SpiderBotSimulator(Env):
         self.fast_mode = fast_mode # no time.sleep
  
         self.physics_client = bc.BulletClient(connection_mode=pb.GUI if self.gui else pb.DIRECT)
-        self.physics_client.setAdditionalSearchPath(pybullet_data.getDataPath())  # get default URDFs like plane   
+        self.physics_client.resetSimulation()
+        self.physics_client.setAdditionalSearchPath(pybullet_data.getDataPath())
         
-        self.physics_client.setRealTimeSimulation(self.real_time_enabled)     # make simulation decoupled from <pb.stepSimulation> and based on internal asynchronous clock instead
-        self.physics_client.setGravity(0, 0, -9.81)  # earth gravity
+        if self.real_time_enabled:
+            self.physics_client.setRealTimeSimulation(True)     # make simulation decoupled from <pb.stepSimulation> and based on internal asynchronous clock instead
+        self.physics_client.setGravity(0, 0, -9.8)  # earth gravity
         
-        self.plane_id = self.physics_client.loadURDF('plane.urdf')  # basic floor
+        planeShape = self.physics_client.createCollisionShape(shapeType=pb.GEOM_PLANE)
+        self.plane_id = self.physics_client.createMultiBody(0, planeShape)
+        self.physics_client.resetBasePositionAndOrientation(self.plane_id, [0, 0, 0], [0, 0, 0, 1])
+        self.physics_client.changeDynamics(self.plane_id, -1, lateralFriction=1.0)
+        
         self.spider = SpiderBot(spider_bot_model_path, self.physics_client)
         
-        self.max_spider_vel = 5
+        for _ in range(10):
+            self.physics_client.stepSimulation()
+            
+        for i in self.spider.all_joints:
+            self.physics_client.setJointMotorControl2(self.spider.id, i, controlMode=pb.VELOCITY_CONTROL, force=0)
         
         self.initial_position = self.spider.get_pos()
         self.last_position = None
         self.curr_position = self.initial_position
         self.velocity = np.zeros(3)
         
-        self.camera = Camera(self.physics_client, initial_pos = self.initial_position)
+        self.camera = Camera(self.physics_client, initial_pos = self.initial_position) if self.gui else None
         self.camera_tracking = False
         self.prev_cd = [True, True, True, True]
         self.is_stepping = [False, False, False, False]
@@ -59,13 +69,13 @@ class SpiderBotSimulator(Env):
                     *np.full(12, -self.spider.max_joint_angle),
                     *np.full(12, -self.spider.nominal_joint_velocity),
                     *np.full(3, -2*np.pi),
-                    *np.full(3, -self.max_spider_vel)
+                    *np.full(3, -1)
                 ]),
             high = np.array([
                     *np.full(12, self.spider.max_joint_angle),
                     *np.full(12, self.spider.nominal_joint_velocity),
                     *np.full(3, 2*np.pi),
-                    *np.full(3, self.max_spider_vel)
+                    *np.full(3, 1)
                 ]),
         )
         
@@ -79,9 +89,14 @@ class SpiderBotSimulator(Env):
         assert num_bodies == 2, f'Expected 2, recieved {num_bodies} bodies'  # there should only be the spider and floor, helps debug multiprocessing
         
         # use control outputs to move robot
-        self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
-        self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
-        self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
+        for i, control in zip(self.spider.joints_flat, controls):
+            control = np.clip(control, -1, 1)
+            target_position = self.spider.joint_limits[i]['center'] + 0.5 * control * self.spider.joint_limits[i]['range']
+            self.spider.set_joint_position(i, target_position)
+            
+        #self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
+        #self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
+        #self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
         # update state vars
         self.last_position = self.curr_position
@@ -103,19 +118,20 @@ class SpiderBotSimulator(Env):
         ankle_heights = np.array(info['ankle-pos']).T[2]
         assert len(cd) == 4
         self.update_steps(cd, ankle_heights)
-        self.spider.clamp_joints(verbose=False)
+        #self.spider.clamp_joints(verbose=False)
         
         return observation, reward, done, info  # adhere to gym interface
         
     def get_observation(self) -> np.array:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
         orientation = self.spider.get_orientation()
+        periods = [25, 50, 100]
         return np.array([
             *joint_info['pos'],
             *joint_info['vel'],
             *orientation,
-            *self.velocity
-        ])   
+            *[np.sin(period/(2 * np.pi)) for period in periods]            
+        ])
 
     def get_ang_vel_proj_score(self) -> float:
         """
@@ -204,7 +220,15 @@ class SpiderBotSimulator(Env):
     def reset(self) -> dict:
         self.physics_client.removeBody(self.spider.id)
         self.spider = SpiderBot(self.spider_bot_model_path, self.physics_client)
-        self.camera.reset()
+        if self.gui:
+            self.camera.reset()
+        
+        for _ in range(10):
+            self.physics_client.stepSimulation()
+            
+        for i in self.spider.all_joints:
+            self.physics_client.setJointMotorControl2(self.spider.id, i, controlMode=pb.VELOCITY_CONTROL, force=0)
+
         
         self.i = 0
         self.t = 0

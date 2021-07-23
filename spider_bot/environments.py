@@ -43,7 +43,7 @@ class SpiderBotSimulator(Env):
 
         self.velocity = np.zeros(3)      #  These three used for health-based reward
         self.torques = np.zeros(12)      #
-        self.V_ay = 0                    #
+        self.V_ax = 0                    #
         
         self.camera = Camera(self.physics_client, initial_pos = self.initial_position) if self.gui else None
         self.camera_tracking = False
@@ -196,14 +196,14 @@ class SpiderBotSimulator(Env):
     def get_health_score(self, body_pos, orientation, tau) -> float:
         z = body_pos[2]
         R, P = orientation[:2]
-        V_y = self.velocity[1]
-        H = 1 if z > 0.125 and np.abs(R) < 0.7 and np.abs(P) < 0.7 else -1
+        V_x = self.velocity[0]
+        H = 0 if z > 0.125 and np.abs(R) < 0.7 and np.abs(P) < 0.7 else -2
         U = -(R**2 + P**2)
-        V_ay = (V_y * 1/256) + (self.V_ay * (1 - 1/256))
-        self.V_ay = V_ay
-        V_d = -np.abs(V_y - V_ay) if V_ay >= 0.3 else 0
+        V_ax = (V_x * 1/256) + (self.V_ax * (1 - 1/256))
+        self.V_ax = V_ax
+        V_d = -np.abs(V_x - V_ax) if V_ax >= 0.3 else 0
         d_tau = -1 * np.sqrt(np.sum((tau - self.torques)**2))
-        reward = H + U + V_ay + V_d + d_tau
+        reward = H + U + V_xy + V_d + d_tau
         #ic(H, U, V_ay, V_d, d_tau, reward)
 
         return reward

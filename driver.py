@@ -154,12 +154,11 @@ class Driver:
         return fitness, agent.id
     
     def preprocess(self, observation: np.ndarray, env) -> np.ndarray:
-        joint_pos, joint_vel, orientation, vel = np.split(observation, [12, 24, 27])
+        joint_pos, joint_vel, orientation, sins = np.split(observation, [12, 24, 27])
         normal_joint_pos = joint_pos / env.spider.max_angle_range
         normal_joint_vel = joint_vel / env.spider.nominal_joint_velocity
         normal_orientation = orientation / (2 * np.pi)
-        normal_vel = vel / env.max_spider_vel
-        return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *normal_vel])
+        return np.array([*normal_joint_pos, *normal_joint_vel, *normal_orientation, *sins])
 
     @staticmethod
     def calc_fitness(initial_pos: np.array, current_pos: np.array, steps: np.array, T: int, verbose=False) -> float:

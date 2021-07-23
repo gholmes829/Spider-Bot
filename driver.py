@@ -1,5 +1,4 @@
 """
-
 """
 
 import os
@@ -106,12 +105,15 @@ class Driver:
         controls = agent.predict(self.preprocess(observation, env))
         joint_pos, joint_vel, joint_torques, body_pos, contact_data, ankle_pos = [], [], [], [], [], []
         body_velocity = []
+        nn_output = [controls]
 
         try:
             while not terminate or (not done and (not max_steps or i < max_steps)):
                 observation, reward, done, info = env.step(controls)
                 rewards.append(reward)
-                
+                controls = agent.predict(self.preprocess(observation, env))
+                i += 1
+
                 if eval:
                     joint_pos.append(info['joint-pos'])
                     joint_vel.append(info['joint-vel'])
@@ -121,15 +123,13 @@ class Driver:
                     ankle_pos.append(info['ankle-pos'])#[:][:][2])
                     vel = env.velocity
                     body_velocity.append(vel)
-                
-                controls = agent.predict(self.preprocess(observation, env))
-                i += 1
-                
+                    nn_output.append(controls)
+
         except KeyboardInterrupt:
             env.close()
 
-        #ic(env.steps)
         fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i, verbose=verbose)
+        #fitness = self.calc_alt_fitness(env.initial_position, env.spider.get_pos(), env.steps, rewards, verbose=eval)
 
         if verbose:
             ic('Done!')
@@ -139,7 +139,6 @@ class Driver:
             ic(np.sum(env.rising_edges, axis=1))
             ic(env.steps)
 
-            
         if eval:
             self.graph_eval_data(
                 np.array(joint_pos).T,
@@ -147,9 +146,9 @@ class Driver:
                 np.array(body_pos).T,
                 np.array(joint_torques).T,
                 np.array(contact_data, dtype=int).T,
-                np.array(ankle_pos).T
+                np.array(ankle_pos).T,
+                np.array(nn_output).T
             )
-            #ic(np.sum(body_velocity, axis=0))
 
         return fitness, agent.id
     
@@ -183,8 +182,19 @@ class Driver:
             ic(total_steps)
             #ic(clipped_T)
             #ic(fitness)
-            
+        
         return float(fitness)
+
+    @staticmethod
+    def calc_alt_fitness(initial_pos: np.array, current_pos: np.array, steps: np.array, rewards: list, verbose=False) -> float:
+        dist_traveled = current_pos[1] - initial_pos[1] #np.linalg.norm((current_pos - initial_pos)[:2])
+        total_steps = np.sum(steps)
+        total_reward = sum(rewards)
+        fitness = total_reward + (100 * dist_traveled * total_steps ** 2)
+        if verbose:
+            ic(dist_traveled, steps, total_reward, fitness)
+        return fitness
+
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:
@@ -230,8 +240,23 @@ class Driver:
                     joint_torques:    np.array,
                     contact_data:     list,
                     ankle_pos:        np.array,
+                    nn_output:        np.array,
                     display_graphs:   bool = False
                     ) -> None:
+
+        """
+        Uses data from a single test episode to create and save the following graphs:
+
+        'joint_torques':    each joint's torque over time
+        'joint_position':   each joint's position/angle over time
+        'joint_velocities': each joint's velocity over time
+        'nn_output':        the output in [0, 1] for each joint over time
+        'contact_data':     binary data indicating whether a leg is touching the ground at a given time step
+        'ankle_heights':    The z-position of each of the robot's ankles over time
+        'body_position':    A 3D graph of the center of mass of the robot's body over time
+
+        """
+
         plt.style.use(["dark_background"])
         plt.rcParams.update({'font.size': 6})
 
@@ -245,6 +270,11 @@ class Driver:
 
         ax = GraphJointData(self.reorder_joints(joint_velocities), "Joint Velocities")
         plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
+        if display_graphs: plt.show()
+
+        ic(nn_output)
+        ax = GraphJointData(self.reorder_joints(nn_output), "Neural Network Output")
+        plt.savefig(os.path.join(self.paths['figures'], 'nn_output'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
         ax = GraphContactData(contact_data)
@@ -267,7 +297,7 @@ class Driver:
         8-11: Outer joints
         Orange -> Green -> Yellow -> Purple
         Helps with graphing
-
+        
         """
         outer_joints = joint_array[[0, 3, 6, 9]]
         middle_joints = joint_array[[1, 4, 7, 10]]

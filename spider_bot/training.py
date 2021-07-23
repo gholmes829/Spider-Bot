@@ -1,5 +1,4 @@
 """
-
 """
 
 import numpy as np
@@ -108,14 +107,13 @@ class Evolution:
             'top_10_fitness': top_10_fitness
         })
         
-        test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
-
-        best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), settings.input_shape, 12)
-        self.fitness_function(best_agent, test_env, verbose=True)
-        
-        test_env.close()
-            
+        if self.current_generation % 5 == 0: 
+            test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
+            best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), settings.input_shape, 12)
+            self.fitness_function(best_agent, test_env, verbose=True)
+            test_env.close()
         self.current_generation += 1
+        
     
     @staticmethod
     def eval_genome_batch(batch, make_env, fitness_func, result_queue, progress_queue):

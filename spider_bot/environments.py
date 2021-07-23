@@ -204,7 +204,7 @@ class SpiderBotSimulator(Env):
         self.V_ay = V_ay
         V_d = -np.abs(V_y - V_ay) if V_ay >= 0.3 else 0
         d_tau = -1 * np.sqrt(np.sum((tau - self.torques)**2))
-        reward = 10 * H + U + V_ay + V_d + d_tau
+        reward = H + U + V_ay + V_d + d_tau
         #ic(H, U, V_ay, V_d, d_tau, reward)
 
         return reward

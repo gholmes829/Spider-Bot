@@ -57,6 +57,20 @@ class SpiderBotSimulator(Env):
             low = np.full(12, -1),
             high = np.full(12, 1)
         )
+
+        
+        # orange, green, yellow, purple        
+        # self.inner_joints = [0, 4, 8, 12]
+        # self.middle_joints = [1, 5, 9, 13]
+        # self.outer_joints = [2, 6, 10, 14]
+        # self.ankles = [3, 7, 11, 15]
+
+        self.joint_pairs = [[0, 12],
+                            [4, 8],
+                            [1, 13],
+                            [5, 9],
+                            [2, 14],
+                            [6, 10]]
         
         self.observation_space = spaces.Box(
             low = np.array([
@@ -83,14 +97,21 @@ class SpiderBotSimulator(Env):
         assert num_bodies == 2, f'Expected 2, recieved {num_bodies} bodies'  # there should only be the spider and floor, helps debug multiprocessing
         
         # use control outputs to move robot
-        for i, control in zip(self.spider.joints_flat, controls):
+        #for i, control in zip(self.spider.joints_flat, controls):
+        #ic(self.spider.joint_limits)
+        for i, control in enumerate(controls):
             control = np.clip(control, -1, 1)
-            target_position = self.spider.joint_limits[i]['center'] + 0.5 * control * self.spider.joint_limits[i]['range']
-            self.spider.set_joint_position(i, target_position)
+            target_position = self.spider.joint_limits[self.joint_pairs[i][0]]['center'] + 0.5 * control * self.spider.joint_limits[self.joint_pairs[i][0]]['range']
+            self.spider.set_joint_position(self.joint_pairs[i][0], target_position)
+            self.spider.set_joint_position(self.joint_pairs[i][1], target_position)
+            #ic(self.joint_pairs[i][0], target_position)
+            #ic(self.joint_pairs[i][1], target_position)
+
+        #controls = self.filter_controls(controls.copy())
             
-        #self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
-        #self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
-        #self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
+        self.spider.set_joint_velocities(self.spider.outer_joints, controls[:4])
+        self.spider.set_joint_velocities(self.spider.middle_joints, controls[4:8])
+        self.spider.set_joint_velocities(self.spider.inner_joints, controls[8:])
         
         # update state vars
         self.last_position = self.curr_position
@@ -106,7 +127,7 @@ class SpiderBotSimulator(Env):
         observation = self.get_observation()
         done = self.is_terminated()
         info = self.get_info()
-        reward = 0 # self.get_health_score(info['body-pos'], info['orientation'], info['joint-torques'])
+        reward = self.get_health_score(info['body-pos'], info['orientation'], info['joint-torques'])
 
         cd = info['contact-data']
         ankle_heights = np.array(info['ankle-pos']).T[2]
@@ -122,11 +143,8 @@ class SpiderBotSimulator(Env):
     def get_observation(self) -> np.array:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
         orientation = self.spider.get_orientation()
-        periods = [25, 50, 100]
+        periods = [25, 50, 100, 256]
         return np.array([
-            *joint_info['pos'],
-            *joint_info['vel'],
-            *orientation,
             *[np.sin((2 * np.pi * self.i) / period) for period in periods]            
         ])
 

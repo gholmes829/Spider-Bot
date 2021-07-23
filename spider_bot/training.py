@@ -53,7 +53,7 @@ class Evolution:
     def eval_genomes(self, genomes, config):
         timer = time()        
         for genome_id, genome in genomes: genome.fitness = 0
-        agents = [Agent(neat.nn.FeedForwardNetwork.create(genome, config), settings.input_shape, 12, id=genome_id) for genome_id, genome in genomes]
+        agents = [Agent(neat.nn.FeedForwardNetwork.create(genome, config), settings.input_shape, settings.output_shape, id=genome_id) for genome_id, genome in genomes]
         agent_batches = np.array_split(agents, self.num_workers)
         
         progress_queue = mp.Queue()
@@ -109,7 +109,7 @@ class Evolution:
         
         if self.current_generation % 5 == 0: 
             test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
-            best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), settings.input_shape, 12)
+            best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), settings.input_shape, 6)
             self.fitness_function(best_agent, test_env, verbose=True)
             test_env.close()
         self.current_generation += 1

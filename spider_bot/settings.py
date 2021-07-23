@@ -1,1 +1,2 @@
-input_shape = 30
+input_shape = 4
+output_shape = 6

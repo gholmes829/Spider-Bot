@@ -88,7 +88,7 @@ class Driver:
         if model is None:
             return
         env = SpiderBotSimulator(self.paths['spider-urdf'])
-        agent = Agent(model, settings.input_shape, 12)
+        agent = Agent(model, settings.input_shape, settings.output_shape)
         self.episode(agent, env, eval=True, verbose=True, max_steps=0)
         print('Done!')
 
@@ -128,8 +128,8 @@ class Driver:
         except KeyboardInterrupt:
             env.close()
 
-        fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i, verbose=verbose)
-        #fitness = self.calc_alt_fitness(env.initial_position, env.spider.get_pos(), env.steps, rewards, verbose=eval)
+        #fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i, verbose=verbose)
+        fitness = self.calc_alt_fitness(env.initial_position, env.spider.get_pos(), env.steps, rewards, verbose=eval)
 
         if verbose:
             ic('Done!')
@@ -272,7 +272,7 @@ class Driver:
         plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
-        ax = GraphJointData(self.reorder_joints(nn_output), "Neural Network Output")
+        ax = GraphJointData(self.reorder_nn_output(nn_output), "Neural Network Output")
         plt.savefig(os.path.join(self.paths['figures'], 'nn_output'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
@@ -288,7 +288,8 @@ class Driver:
         plt.savefig(os.path.join(self.paths['figures'], 'body_position'))
         if display_graphs: plt.show()
 
-    def reorder_joints(self, joint_array: np.array) -> np.array:
+    @staticmethod
+    def reorder_joints(joint_array: np.array) -> np.array:
         """ 
         Reformats an array of joint information as follows:
         0-3: Inner joints 
@@ -297,8 +298,22 @@ class Driver:
         Orange -> Green -> Yellow -> Purple
         Helps with graphing
 
+        self.joint_pairs = [[0, 12],
+                    [4, 8],
+                    [1, 13],
+                    [5, 9],
+                    [2, 14],
+                    [6, 10]]
+
         """
         outer_joints = joint_array[[0, 3, 6, 9]]
         middle_joints = joint_array[[1, 4, 7, 10]]
         inner_joints = joint_array[[2, 5, 8, 11]]
+        return joint_array # np.vstack((inner_joints, middle_joints, outer_joints))
+
+    @staticmethod
+    def reorder_nn_output(nn_output: np.array) -> np.array:
+        inner_joints = nn_output[[0, 1, 1, 0]]
+        middle_joints = nn_output[[2, 3, 3, 2]]
+        outer_joints = nn_output[[4, 5, 5, 4]]
         return np.vstack((inner_joints, middle_joints, outer_joints))

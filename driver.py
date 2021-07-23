@@ -264,7 +264,7 @@ class Driver:
         plt.savefig(os.path.join(self.paths['figures'], 'joint_torques'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
-        ax = GraphJointData(self.reorder_joints(joint_positions), "Joint Angles")#, ymin = -np.pi / 2, ymax = np.pi / 2)
+        ax = GraphJointData(self.reorder_joints(joint_positions), "Joint Angles")
         plt.savefig(os.path.join(self.paths['figures'], 'joint_angles'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
@@ -272,7 +272,6 @@ class Driver:
         plt.savefig(os.path.join(self.paths['figures'], 'joint_velocities'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
 
-        ic(nn_output)
         ax = GraphJointData(self.reorder_joints(nn_output), "Neural Network Output")
         plt.savefig(os.path.join(self.paths['figures'], 'nn_output'), bbox_inches="tight", pad_inches = 0.25, dpi = 150)
         if display_graphs: plt.show()
@@ -297,7 +296,7 @@ class Driver:
         8-11: Outer joints
         Orange -> Green -> Yellow -> Purple
         Helps with graphing
-        
+
         """
         outer_joints = joint_array[[0, 3, 6, 9]]
         middle_joints = joint_array[[1, 4, 7, 10]]

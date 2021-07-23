@@ -127,8 +127,8 @@ class Driver:
             env.close()
 
         #ic(env.steps)
-        fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i, verbose=verbose)
-
+        #fitness = self.calc_fitness(env.initial_position, env.spider.get_pos(), env.steps, i, verbose=verbose)
+        fitness = self.calc_alt_fitness(env.initial_position, env.spider.get_pos(), env.steps, rewards, verbose=eval)
         if verbose:
             ic('Done!')
             ic(fitness)
@@ -182,8 +182,19 @@ class Driver:
             ic(total_steps)
             #ic(clipped_T)
             #ic(fitness)
-            
+        
         return float(fitness)
+
+    @staticmethod
+    def calc_alt_fitness(initial_pos: np.array, current_pos: np.array, steps: np.array, rewards: list, verbose=False) -> float:
+        dist_traveled = current_pos[1] - initial_pos[1] #np.linalg.norm((current_pos - initial_pos)[:2])
+        total_steps = np.sum(steps)
+        total_reward = sum(rewards)
+        fitness = total_reward + (100 * dist_traveled * total_steps ** 2)
+        if verbose:
+            ic(dist_traveled, steps, total_reward, fitness)
+        return fitness
+
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

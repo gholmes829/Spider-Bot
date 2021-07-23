@@ -95,12 +95,12 @@ class Evolution:
         elapsed = time() - timer
         self.graph.send_data({'average_fitness': avg_fitness, 'best_fitness': best_genome.fitness, 'time_elapsed': elapsed})
         
-        test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
+        # test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
 
-        best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
-        self.fitness_function(best_agent, test_env, verbose=True)
+        # best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
+        # self.fitness_function(best_agent, test_env, verbose=True)
         
-        test_env.close()
+        # test_env.close()
             
         self.current_generation += 1
     

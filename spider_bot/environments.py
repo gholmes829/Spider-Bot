@@ -39,7 +39,10 @@ class SpiderBotSimulator(Env):
         self.initial_position = self.spider.get_pos()
         self.last_position = None
         self.curr_position = self.initial_position
+        self.prev_velocity = np.zeros(3)
         self.velocity = np.zeros(3)
+        self.torques = np.zeros(12)
+        self.V_ay = 0
         
         self.camera = Camera(self.physics_client, initial_pos = self.initial_position)
         self.camera_tracking = False
@@ -88,22 +91,25 @@ class SpiderBotSimulator(Env):
         self.physics_client.stepSimulation()
         self.physics_client.performCollisionDetection()
         self.current_position = self.spider.get_pos()
-        self.velocity = self.current_position - self.last_position
+        self.velocity = self.physics_client.getBaseVelocity(self.spider.id)[0]
         
         if not self.fast_mode:
             time.sleep(1 / 256)
         self.i += 1
 
         observation = self.get_observation()
-        reward = 0
         done = self.is_terminated()
         info = self.get_info()
+        reward = self.get_health_score(info['body-pos'], info['orientation'], info['joint-torques'])
 
         cd = info['contact-data']
         ankle_heights = np.array(info['ankle-pos']).T[2]
         assert len(cd) == 4
         self.update_steps(cd, ankle_heights)
         self.spider.clamp_joints(verbose=False)
+
+        self.prev_velocity = self.velocity
+        self.torques = np.array(info['joint-torques'])
         
         return observation, reward, done, info  # adhere to gym interface
         
@@ -162,6 +168,21 @@ class SpiderBotSimulator(Env):
         else:  # projection of velocity onto best direction
             return ((velocity @ origin_to_bot) / np.linalg.norm(origin_to_bot)) * reward_amplifier
 
+    def get_health_score(self, body_pos, orientation, tau) -> float:
+        z = body_pos[2]
+        R, P = orientation[:2]
+        V_y = self.velocity[1]
+        H = 1 if z > 0.125 and np.abs(R) < 0.7 and np.abs(P) < 0.7 else -1
+        U = -(R**2 + P**2)
+        V_ay = (V_y * 1/256) + (self.V_ay * (1 - 1/256))
+        self.V_ay = V_ay
+        V_d = -np.abs(V_y - V_ay) if V_ay >= 0.3 else 0
+        d_tau = -1 * np.sqrt(np.sum((tau - self.torques)**2))
+        reward = 10 * H + U + V_ay + V_d + d_tau
+        #ic(H, U, V_ay, V_d, d_tau, reward)
+
+        return reward
+
     def get_info(self) -> dict:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
         binary_contact_data = self.get_contact_data()
@@ -215,6 +236,7 @@ class SpiderBotSimulator(Env):
         self.last_position = None
         self.curr_position = self.initial_position
         self.velocity = np.zeros(3)
+        self.prev_velocity = np.zeros(3)
         
         self.prev_cd = [True, True, True, True]
         self.is_stepping = [False, False, False, False]

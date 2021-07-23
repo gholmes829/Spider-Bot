@@ -17,15 +17,17 @@ def live_training_cb(axes, memory: dict, queue: mp.Queue):
         average_fitness = memory['average_fitness']
         best_fitness = memory['best_fitness']
         time_elapsed = memory['time_elapsed']
+        top_10_fitness = memory['top_10_fitness']
         
         assert len(average_fitness) == len(best_fitness) == len(time_elapsed)
         
         n = len(average_fitness)
         
-        axes[0].plot(range(n), average_fitness, 'r', label='Average')
-        axes[0].plot(range(n), best_fitness, 'g', label='Best')
+        axes[0].plot(range(n), average_fitness, 'r')
+        axes[0].plot(range(n), best_fitness, 'g')
+        axes[0].plot(range(n), top_10_fitness, 'cyan')
         
-        axes[1].plot(range(n), time_elapsed, 'cyan')
+        axes[1].plot(range(n), time_elapsed, 'magenta')
         
         axes[0].set_xlim([0, n + 2])
         axes[1].set_xlim([0, n + 2])
@@ -35,15 +37,18 @@ def live_training_cb(axes, memory: dict, queue: mp.Queue):
     
 def initialize_axes(memory: dict):
     plt.style.use('dark_background')
-    memory['average_fitness'] = [0]
-    memory['best_fitness'] = [0]
-    memory['time_elapsed'] = [0]
+    memory['average_fitness'] = []
+    memory['best_fitness'] = []
+    memory['time_elapsed'] = []
+    memory['top_10_fitness'] = []
     
     fig, axes = plt.subplots(2)
     
-    axes[0].plot([0], [0], 'r', label='Average')
-    axes[0].plot([0], [0], 'g', label='Best')
-    axes[1].plot([0], [0], 'cyan')
+    axes[0].plot([], [], 'r', label='Average')
+    axes[0].plot([], [], 'g', label='Best')
+    axes[0].plot([], [], 'cyan', label='Top 10%')
+    
+    axes[1].plot([], [], 'magenta')
     
     axes[0].set_title('Fitnesses')
     axes[0].set_ylabel('Fitness')

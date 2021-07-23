@@ -83,19 +83,30 @@ class Evolution:
         total_fitess = 0
         best_genome = None
         
+        fitnesses = []
         for i, (genome_id, genome) in enumerate(genomes):
             fitness, agent_id = results_flat[i]
             assert agent_id == genome_id, f'Agent id, {agent_id}, and genome id, {genome_id}, don\'t match'
             genome.fitness = fitness
+            fitnesses.append(fitness)
             total_fitess += fitness
             if best_genome is None or genome.fitness > best_genome.fitness: best_genome = genome
+            
+        fitnesses.sort(reverse=True)  # sort in descending order
+        num_top_10 = int(len(fitnesses) / 10)
+        top_10_fitness = sum(fitnesses[:num_top_10]) / num_top_10
             
         self.checkpoint(best_genome, config)
         avg_fitness = total_fitess / len(genomes)
         self.average_fitnesses.append(avg_fitness)
         
         elapsed = time() - timer
-        self.graph.send_data({'average_fitness': avg_fitness, 'best_fitness': best_genome.fitness, 'time_elapsed': elapsed})
+        self.graph.send_data({
+            'average_fitness': avg_fitness,
+            'best_fitness': best_genome.fitness,
+            'time_elapsed': elapsed,
+            'top_10_fitness': top_10_fitness
+        })
         
         test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
 

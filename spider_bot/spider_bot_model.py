@@ -27,8 +27,8 @@ class SpiderBot:
         self.joints_flat = self.inner_joints + self.middle_joints + self.outer_joints
         
         # move joints to initial pos
-        self.reset_joints_state(self.outer_joints, np.full(4, -0.5))
-        self.reset_joints_state(self.middle_joints, np.full(4, -1))
+        self.reset_joints_state(self.outer_joints, np.full(4, -0.4))
+        self.reset_joints_state(self.middle_joints, np.full(4, -0.75))
         self.reset_joints_state(self.inner_joints, np.full(4, 1))
         
         self.change_lateral_friction(self.ankles, np.full(4, 2))

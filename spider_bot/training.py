@@ -1,5 +1,4 @@
 """
-
 """
 
 import numpy as np
@@ -23,7 +22,7 @@ class Evolution:
         self.generations = gens
         self.current_generation = 0
         self.num_workers = 1  # default initialization, change in <Evolution.run>
-        self.graph = None
+        self.graph = graph
 
         self.progress = 0
         self.average_fitnesses = []
@@ -94,14 +93,14 @@ class Evolution:
         self.average_fitnesses.append(avg_fitness)
         
         elapsed = time() - timer
-        #self.graph.send_data({'average_fitness': avg_fitness, 'best_fitness': best_genome.fitness, 'time_elapsed': elapsed})
+        self.graph.send_data({'average_fitness': avg_fitness, 'best_fitness': best_genome.fitness, 'time_elapsed': elapsed})
         
-        # test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
+        test_env = self.make_env(gui=True, fast_mode=False, real_time_enabled = False)
 
-        # best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
-        # self.fitness_function(best_agent, test_env, verbose=True)
+        best_agent = Agent(neat.nn.FeedForwardNetwork.create(best_genome, config), 30, 12)
+        self.fitness_function(best_agent, test_env, verbose=True)
         
-        # test_env.close()
+        test_env.close()
             
         self.current_generation += 1
     

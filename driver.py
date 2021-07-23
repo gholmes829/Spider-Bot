@@ -169,15 +169,15 @@ class Driver:
         total_steps = np.sum(steps)
         #avg_outward_vel = dist_traveled / T
         #avg_steps_per_leg = np.mean(num_steps)
-        #steps_std = np.std(num_steps)
+        steps_std = np.std(steps)
         #steps_cv = steps_std / avg_steps_per_leg
         #avg_steps_per_time = total_steps / T
 
         #default_min = 50
         #clipped_T = min(default_min + total_steps * 10, T)
         #fitness = 1e-3 * clipped_T ** 2  # float(np.sum(steps) ** 2 + 0.1 * min(T, 100))
-
-        fitness = ((1 + len([step for step in steps if step])) ** 2) * np.sqrt(dist_traveled) * (1 + total_steps)
+        
+        fitness = (1 + min(steps) ** 2) * (dist_traveled ** 2) * (1 + total_steps / T) / (1 + steps_std ** 2)
         if verbose:
             ic(steps)
             ic(total_steps)

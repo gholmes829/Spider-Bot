@@ -130,7 +130,7 @@ class SpiderBotSimulator(Env):
             *joint_info['pos'],
             *joint_info['vel'],
             *orientation,
-            *[np.sin(period/(2 * np.pi)) for period in periods]            
+            *[np.sin((2 * np.pi * self.i) / period) for period in periods]            
         ])
 
     def get_ang_vel_proj_score(self) -> float:

@@ -187,7 +187,7 @@ class Driver:
 
     @staticmethod
     def calc_alt_fitness(initial_pos: np.array, current_pos: np.array, steps: np.array, rewards: list, verbose=False) -> float:
-        dist_traveled = current_pos[1] - initial_pos[1] #np.linalg.norm((current_pos - initial_pos)[:2])
+        dist_traveled = current_pos[0] - initial_pos[0] # encourage x-direction movement
         total_steps = np.sum(steps)
         total_reward = sum(rewards)
         fitness = total_reward + (50 * dist_traveled * total_steps ** 2)

@@ -109,7 +109,7 @@ class SpiderBotSimulator(Env):
 
         #controls = self.filter_controls(controls.copy())
         for i, pair in enumerate(self.joint_pairs):
-            self.spider.set_joint_velocities(pair, [controls[i], controls[i]])
+            self.spider.set_joint_velocities(pair, [controls[i], -1 * controls[i]])
         # self.spider.set_joint_velocities(self.spider.outer_joints, controls[i])
         # self.spider.set_joint_velocities(self.spider.middle_joints, controls[i])
         # self.spider.set_joint_velocities(self.spider.inner_joints, controls[i])

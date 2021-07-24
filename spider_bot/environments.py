@@ -67,10 +67,10 @@ class SpiderBotSimulator(Env):
 
         self.joint_pairs = [[0, 12],
                             [4, 8],
-                            [1, 13],
-                            [5, 9],
                             [2, 14],
-                            [6, 10]]
+                            [6, 10],
+                            [5, 9],
+                            [1, 13]]
         
         self.observation_space = spaces.Box(
             low = np.array([
@@ -109,7 +109,8 @@ class SpiderBotSimulator(Env):
 
         #controls = self.filter_controls(controls.copy())
         for i, pair in enumerate(self.joint_pairs):
-            self.spider.set_joint_velocities(pair, [controls[i], -1 * controls[i]])
+            sign = 1 if i < 4 else -1
+            self.spider.set_joint_velocities(pair, [controls[i], sign * controls[i]])
         # self.spider.set_joint_velocities(self.spider.outer_joints, controls[i])
         # self.spider.set_joint_velocities(self.spider.middle_joints, controls[i])
         # self.spider.set_joint_velocities(self.spider.inner_joints, controls[i])
@@ -144,7 +145,7 @@ class SpiderBotSimulator(Env):
     def get_observation(self) -> np.array:
         joint_info = self.spider.get_joints_state(self.spider.joints_flat)
         orientation = self.spider.get_orientation()
-        periods = [25, 50, 100, 256]
+        periods = [32, 64, 128, 256]
         return np.array([
             *[np.sin((2 * np.pi * self.i) / period) for period in periods]            
         ])
@@ -198,13 +199,13 @@ class SpiderBotSimulator(Env):
         z = body_pos[2]
         R, P = orientation[:2]
         V_x = self.velocity[0]
-        H = 0 if z > 0.125 and np.abs(R) < 0.7 and np.abs(P) < 0.7 else -2
+        H = 0 if z > 0.125 and np.abs(R) < 0.7 and np.abs(P) < 0.7 else -1
         U = -(R**2 + P**2)
         V_ax = (V_x * 1/256) + (self.V_ax * (1 - 1/256))
         self.V_ax = V_ax
         V_d = -np.abs(V_x - V_ax) if V_ax >= 0.3 else 0
         d_tau = -1 * np.sqrt(np.sum((tau - self.torques)**2))
-        reward = H + U + V_xy + V_d + d_tau
+        reward = H + U + V_ax + V_d + d_tau
         #ic(H, U, V_ay, V_d, d_tau, reward)
 
         return reward

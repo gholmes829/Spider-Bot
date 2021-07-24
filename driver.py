@@ -190,7 +190,7 @@ class Driver:
         dist_traveled = current_pos[0] - initial_pos[0] # encourage x-direction movement
         total_steps = np.sum(steps)
         total_reward = sum(rewards)
-        fitness = total_reward + (50 * dist_traveled * total_steps ** 2)
+        fitness = total_reward + (200 * dist_traveled * total_steps ** 2)
         if verbose:
             ic(dist_traveled, steps, total_reward, fitness)
         return fitness

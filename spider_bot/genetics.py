@@ -46,7 +46,7 @@ class Genetics:
         self.target_gens = gens
         
         self.evaluate_population = evaluate_population
-        self.crossover = crossover_parents
+        self.crossover_parents = crossover_parents
         self.mutate_member = mutate_member
         self.generation_callback = make_dynamic_param(generation_cb)
         
@@ -64,7 +64,7 @@ class Genetics:
             self.gen += 1
 
             parents = self.select_parents()
-            children = self.make_children({parent.id: parent for parent in parents})
+            children = self.make_children(parents)
             mutants = self.make_mutants()
             
             self.population += children + mutants
@@ -98,9 +98,9 @@ class Genetics:
             
         return parents
 
-    def make_children(self, parent_pool) -> List[Member]:
+    def make_children(self, parent_pool: List[Member]) -> List[Member]:
         children = []
-        available_ids = list(parent_pool.keys())
+        available_ids = [parent.id for parent in parent_pool]
         crossover_rate = self.crossover_rate(self.gen)
         num_parents_per_child = self.num_parents_per_child(self.gen)
         children_to_make = int(self.population_size * crossover_rate)
@@ -109,7 +109,7 @@ class Genetics:
             parents = [self.id_to_member[parent_id] for parent_id in parent_ids]
             for parent_id in parent_ids: 
                 available_ids.remove(parent_id)
-            children.append(self.crossover(parents))
+            children.append(self.crossover_parents(parents))
             
         return children
 
@@ -124,7 +124,7 @@ class Genetics:
             mutant = self.id_to_member[mutant_id]
             num_mutations = random.choice(mutation_strength_dist)
             for _ in range(num_mutations):
-                mutant = self.mutate(mutant)
+                mutant = self.mutate_member(mutant)
             mutants.append(mutant)
             available_ids.remove(mutant_id)
             

@@ -9,10 +9,15 @@ from typing import Callable, Optional, Union, List, Any, Dict
 # type aliases
 MemberId = int
 Generation = int
-Member = Any
 
 def make_dynamic_param(param: Any) -> Callable[[Optional[List[Any]], Optional[Dict[Any, Any]]], Any]:
     return lambda *args, **kwargs: param if not callable(param) else param
+
+class Member:
+    # base class
+    def __init__(self):
+        self.fitness = np.NINF
+        self.id = None
 
 class Genetics:
 
@@ -22,6 +27,7 @@ class Genetics:
                 evaluate_population: Callable[[Dict[MemberId, Member]], None],
                 crossover_parents: Callable[[List[Member]], Member],
                 mutate_member: Callable[[Member], Member],
+                generation_cb: Optional[Callable[[List[Member]], None]],
                 crossover_rate: Optional[Union[float, Callable[[Generation], float]]] = 0.3,
                 mutation_rate: Optional[Union[float, Callable[[Generation], float]]] = 0.7,
                 parent_competition_size: Optional[int] = 3,
@@ -30,15 +36,19 @@ class Genetics:
                 ) -> None:
         
         self.population = initial_population
-        self.target_gens = gens
+        for member in self.population:
+            assert isinstance(member, Member)  # ensures all members enherit from Member
         self.id_to_member = {member.id: member for member in self.population}
         self.next_available_id = max(self.id_to_member.keys()) + 1
         self.population_size = len(initial_population)
         self.best_member = None
         
+        self.target_gens = gens
+        
         self.evaluate_population = evaluate_population
         self.crossover = crossover_parents
         self.mutate_member = mutate_member
+        self.generation_callback = make_dynamic_param(generation_cb)
         
         self.crossover_rate = make_dynamic_param(crossover_rate)
         self.mutation_rate = make_dynamic_param(mutation_rate)
@@ -69,6 +79,7 @@ class Genetics:
             
             assert len(self.id_to_member) == len(self.population) == self.population_size  # ids must be unique
             self.id_to_member = {member.id: member for member in self.population}
+            self.generation_callback(self.population)
 		
     def is_done(self):
         return self.gen > self.target_gens

@@ -13,8 +13,8 @@ from spider_bot.utils import LivePlotter
 from spider_bot.environments import SpiderBotSimulator
 from spider_bot.agent import Agent
 from spider_bot.training import Evolution
-import graphing
-from graphing import *
+from spider_bot import graphing
+from spider_bot.graphing import *
 from spider_bot import settings
 
 class Driver:

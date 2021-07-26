@@ -31,18 +31,17 @@ class SpiderBotSimulator(Env):
         
         if self.real_time_enabled:
             self.physics_client.setRealTimeSimulation(True)     # make simulation decoupled from <pb.stepSimulation> and based on internal asynchronous clock instead
-        self.physics_client.setGravity(0, 0, -9.8)  # earth gravity
-        
-        planeShape = self.physics_client.createCollisionShape(shapeType=pb.GEOM_PLANE)
-        self.plane_id = self.physics_client.createMultiBody(0, planeShape)
+        self.physics_client.setGravity(0, 0, -9.81)  # earth gravity
+
+        plane_shape = self.physics_client.createCollisionShape(shapeType=pb.GEOM_PLANE)
+        self.plane_id = self.physics_client.createMultiBody(0, plane_shape)
         self.physics_client.resetBasePositionAndOrientation(self.plane_id, [0, 0, 0], [0, 0, 0, 1])
         self.physics_client.changeDynamics(self.plane_id, -1, lateralFriction=1.0)
-        
         self.spider = SpiderBot(spider_bot_model_path, self.physics_client)
         
         for _ in range(10):
-            self.physics_client.stepSimulation()
-            
+            self.physics_client.stepSimulation()  # warm everything up
+
         for i in self.spider.all_joints:
             self.physics_client.setJointMotorControl2(self.spider.id, i, controlMode=pb.VELOCITY_CONTROL, force=0)
         
@@ -100,6 +99,7 @@ class SpiderBotSimulator(Env):
         
         # update state vars
         self.last_position = self.curr_position
+        self.prev_velocity = self.velocity
         self.physics_client.stepSimulation()
         self.physics_client.performCollisionDetection()
         self.current_position = self.spider.get_pos()

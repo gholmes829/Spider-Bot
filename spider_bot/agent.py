@@ -13,7 +13,7 @@ def validate_shape(f = None, *, terminate_on_bound_error = True):
             """
             Makes assertions to catch errors with shape and normalization.
             """
-            assert len(args) == 2, f'Recieved unexpected positional arguments {args}'
+            assert len(args) == 2, f'Recieved unexpected positional arguments {args}'  # should just recieve agent (self) and obersvation
             agent, observation = args
             try:
                 assert all([-1.01 <= e <= 1.01 for e in observation]), f'Expected argument normalized in [-1, 1], recieved {observation}'
@@ -39,7 +39,7 @@ class Agent:
         self.model = model
         self.input_shape = input_shape
         self.output_shape = output_shape
-        #self.i = 0
+        self.fitness = None
         self.id = id
     
     @validate_shape(terminate_on_bound_error = False)

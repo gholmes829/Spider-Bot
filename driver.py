@@ -185,6 +185,48 @@ class Driver:
             #ic(fitness)
             
         return float(fitness)
+
+    def mutate(self, network: object) -> object:
+        """
+        Provides mutated clone of network.
+        Mutates by assigning random value to a given number of 
+        weights, biases, or activations
+
+        """
+        mutant = deepcopy(network)
+        target = choice(("weights", "biases"))
+
+        if target == "weights":
+            randLayer = randint(0, len(network["weights"]) - 1)
+            randNeuron = randint(0, len(network["weights"][randLayer]) - 1)
+            randWeight = randint(0, len(network["weights"][randLayer][randNeuron]) - 1)
+            network["weights"][randLayer][randNeuron][randWeight] = np.random.randn()
+        else:
+            randLayer = randint(0, len(network["biases"]) - 1)
+            randBias = randint(0, len(network["biases"][randLayer]) - 1)
+            network["biases"][randLayer][randBias] = np.random.randn()
+                
+        return mutant
+    
+    def crossover(self, parent1: object, parent2: object) -> object:
+        """
+        Cross over traits from parents for new member.
+        Decides to cross over parents' weights or biases. Selects a random neuron to crossover.
+
+        """
+        child1, child2 = deepcopy(parent1), deepcopy(parent2)
+        target = choice(("weights", "biases"))
+
+        randLayer = randint(0, len(child[target]) - 1)
+        randTargetElement = randint(0, len(child1[target][randLayer]) - 1)
+        temp = deepcopy(child1)
+        child1[target][randLayer][randTargetElement] = child2[target][randLayer][randTargetElement]
+        child2[target][randLayer][randTargetElement] = temp[target][randLayer][randTargetElement]
+
+        env1, env2 = [self.make_env for _ in range(2)]
+        fitness1, fitness2 = self.episode(child1, env1) self.episode(child2, env2)
+        return child1 if fitness1 > fitness2 else child2
+
         
     def save_model(self, model) -> None:
         with open(os.path.join(self.paths['models'], self.model_name), 'wb') as f:

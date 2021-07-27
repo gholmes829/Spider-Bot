@@ -16,7 +16,8 @@ from spider_bot.training import Evolution
 from spider_bot import graphing
 from spider_bot.graphing import *
 from spider_bot import settings
-from spider_bot.controllers.py import *
+from spider_bot.controllers import *
+from spider_bot.genetics import Genetics
 
 class Driver:
     def __init__(self):
@@ -227,7 +228,7 @@ class Driver:
         child2[target][randLayer][randTargetElement] = temp[target][randLayer][randTargetElement]
 
         env1, env2 = [self.make_env for _ in range(2)]
-        fitness1, fitness2 = self.episode(child1, env1) self.episode(child2, env2)
+        fitness1, fitness2 = self.episode(child1, env1), self.episode(child2, env2)
         return child1 if fitness1 > fitness2 else child2
 
         
@@ -320,7 +321,7 @@ class Driver:
         return np.vstack((inner_joints, middle_joints, outer_joints))
 
 
-    def self.train_neat()
+    def train_neat(self):
         self.get_model_name()
         gens = int(input("Number of generations: "))
         

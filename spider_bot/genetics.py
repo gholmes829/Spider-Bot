@@ -15,9 +15,9 @@ def make_dynamic_param(param: Any) -> Callable[[Optional[List[Any]], Optional[Di
 
 class Member:
     # base class
-    def __init__(self):
+    def __init__(self, id: int = None):
         self.fitness = np.NINF
-        self.id = None
+        self.id = id
 
 class Genetics:
 

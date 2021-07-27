@@ -16,12 +16,14 @@ from spider_bot.training import Evolution
 from spider_bot import graphing
 from spider_bot.graphing import *
 from spider_bot import settings
+from spider_bot.controllers.py import *
 
 class Driver:
     def __init__(self):
         self.modes = {
             'test': self.test_bot,
-            'train': self.train
+            'train': self.train,
+            'neat': self.train_neat
         }
         
         args = self.parse_args()
@@ -68,21 +70,22 @@ class Driver:
         checkpoint_dir = os.path.join(self.paths['checkpoints'], self.model_name[:-7])
         os.mkdir(checkpoint_dir) # create a directory to save checkpoints
         
-        graph = LivePlotter(graphing.live_training_cb, graphing.initialize_axes, interval=1000)
-        graph.start()
-        ev = Evolution(self.make_env, self.episode, checkpoint_dir, graph, gens=gens)
+        # graph = LivePlotter(graphing.live_training_cb, graphing.initialize_axes, interval=1000)
+        # graph.start()
 
-        config_path = os.path.join(self.cwd, 'neat/neat_config')
+        population = self.make_initial_population(settings.population_size)
+        ga = Genetics(population, gens, eval_genomes, self.crossover, self.mutate, self.save_best_model)
 
-        (winner_net, fitnesses), time_to_train = ev.run(config_path)
+        #(winner_net, fitnesses), time_to_train = ga.evolve()
+        ga.evolve()
 
-        print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
+        # print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
 
-        self.graph_training_data(np.array(fitnesses))
-        self.save_model(winner_net)
+        # self.graph_training_data(np.array(fitnesses))
+        # self.save_model(winner_net)
         
-        print('Close graph to end training...')
-        graph.close()
+        # print('Close graph to end training...')
+        # graph.close()
 
     def test_bot(self):
         model = self.load_model()
@@ -315,3 +318,34 @@ class Driver:
         middle_joints = joint_array[[1, 4, 7, 10]]
         inner_joints = joint_array[[2, 5, 8, 11]]
         return np.vstack((inner_joints, middle_joints, outer_joints))
+
+
+    def self.train_neat()
+        self.get_model_name()
+        gens = int(input("Number of generations: "))
+        
+        checkpoint_dir = os.path.join(self.paths['checkpoints'], self.model_name[:-7])
+        os.mkdir(checkpoint_dir) # create a directory to save checkpoints
+        
+        graph = LivePlotter(graphing.live_training_cb, graphing.initialize_axes, interval=1000)
+        graph.start()
+        ev = Evolution(self.make_env, self.episode, checkpoint_dir, graph, gens=gens)
+
+        config_path = os.path.join(self.cwd, 'neat/neat_config')
+
+        (winner_net, fitnesses), time_to_train = ev.run(config_path)
+
+        print("Training successfully completed in " + str(time_to_train / 60.0) + " Minutes")
+
+        self.graph_training_data(np.array(fitnesses))
+        self.save_model(winner_net)
+        
+        print('Close graph to end training...')
+        graph.close()
+
+    def make_initial_population(self, pop_size: int) -> list:
+        return [FFNN(settings.architecture, np.base_repr(i + 1, 36)) for i in range(pop_size)]
+
+    def save_best_model(self, population: list) -> None:
+        pass
+        

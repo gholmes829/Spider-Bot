@@ -11,6 +11,7 @@ from functools import wraps
 from time import time
 
 def timed(f):
+    """Decorates function to return (function output, time elapsed) in order to get function runtime"""
     @wraps(f)
     def g(*args, **kwargs):
         start = time()
@@ -20,6 +21,7 @@ def timed(f):
     return g
 
 def simplify_anim_cb_signature(f):
+    """Decorates matplotlib animate callback function to allow callback to not expect <frame> as first positional argument"""
     @wraps(f)
     def anim_cb(_, *args, **kwargs):
         out = f(*args, **kwargs)
@@ -27,6 +29,9 @@ def simplify_anim_cb_signature(f):
     return anim_cb
 
 class LivePlotter:
+    """
+    Spawns a new process that runs a live graph that can be asynchonously updated from other processes.
+    """
     def __init__(self, animation_cb, initialize_axes, verbose=True, **kwargs) -> None:
         self.queue = mp.Queue()
         self.process = mp.Process(target=self.run, args=(self.queue, animation_cb, initialize_axes, verbose), kwargs=kwargs)
